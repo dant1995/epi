@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -74,12 +74,12 @@ function authenticateToken(req, res, next) {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ error: 'Acesso negado. Token não fornecido.' });
+    return res.status(401).json({ error: 'Acesso negado. Token nÃ£o fornecido.' });
   }
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
-      return res.status(403).json({ error: 'Token inválido ou expirado.' });
+      return res.status(403).json({ error: 'Token invÃ¡lido ou expirado.' });
     }
     req.user = user;
     next();
@@ -91,11 +91,11 @@ function requireAdmin(req, res, next) {
   if (req.user && req.user.role === 'admin') {
     next();
   } else {
-    return res.status(403).json({ error: 'Acesso negado. Área exclusiva do Administrador Epi.' });
+    return res.status(403).json({ error: 'Acesso negado. Ãrea exclusiva do Administrador Epi.' });
   }
 }
 
-// Helper para Gerar Código de Indicação
+// Helper para Gerar CÃ³digo de IndicaÃ§Ã£o
 function generateReferralCode(name) {
   const cleanName = name.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 4);
   const randomNum = Math.floor(1000 + Math.random() * 9000);
@@ -103,10 +103,10 @@ function generateReferralCode(name) {
 }
 
 // ----------------------------------------------------
-// ROTAS DE AUTENTICAÇÃO E CADASTRO Epi
+// ROTAS DE AUTENTICAÃ‡ÃƒO E CADASTRO Epi
 // ----------------------------------------------------
 
-// 1. Validação de Patrocinador
+// 1. ValidaÃ§Ã£o de Patrocinador
 app.get('/api/sponsor/validate/:identifier', async (req, res) => {
   try {
     const { identifier } = req.params;
@@ -115,7 +115,7 @@ app.get('/api/sponsor/validate/:identifier', async (req, res) => {
     if (!sponsor) {
       return res.status(404).json({ 
         valid: false, 
-        message: 'Patrocinador Epi não encontrado. Verifique o código digitado.' 
+        message: 'Patrocinador Epi nÃ£o encontrado. Verifique o cÃ³digo digitado.' 
       });
     }
 
@@ -134,7 +134,7 @@ app.get('/api/sponsor/validate/:identifier', async (req, res) => {
   }
 });
 
-// 2. Registro com Matriz Forçada 3x3 e Seleção de Perna (Derrame)
+// 2. Registro com Matriz ForÃ§ada 3x3 e SeleÃ§Ã£o de Perna (Derrame)
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { name, email, password, sponsorIdentifier, targetLeg } = req.body;
@@ -144,23 +144,23 @@ app.post('/api/auth/register', async (req, res) => {
     }
 
     if (!sponsorIdentifier) {
-      return res.status(400).json({ error: 'O código do Patrocinador Epi é obrigatório.' });
+      return res.status(400).json({ error: 'O cÃ³digo do Patrocinador Epi Ã© obrigatÃ³rio.' });
     }
 
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
-      return res.status(400).json({ error: 'Este e-mail já está registrado na plataforma Epi.' });
+      return res.status(400).json({ error: 'Este e-mail jÃ¡ estÃ¡ registrado na plataforma Epi.' });
     }
 
     const sponsor = await findUserByIdentifier(sponsorIdentifier);
     if (!sponsor) {
-      return res.status(400).json({ error: 'Patrocinador inválido. Não foi possível realizar o cadastro.' });
+      return res.status(400).json({ error: 'Patrocinador invÃ¡lido. NÃ£o foi possÃ­vel realizar o cadastro.' });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
     const referralCode = generateReferralCode(name);
 
-    // Registro com alocação na perna escolhida (Esquerda, Centro, Direita ou Auto)
+    // Registro com alocaÃ§Ã£o na perna escolhida (Esquerda, Centro, Direita ou Auto)
     const newUser = await createUserLspc({
       name,
       email,
@@ -209,7 +209,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     const user = await findUserByEmail(email);
     if (!user) {
-      return res.status(401).json({ error: 'E-mail não encontrado.' });
+      return res.status(401).json({ error: 'E-mail nÃ£o encontrado.' });
     }
 
     const validPassword = await bcrypt.compare(password, user.password_hash);
@@ -253,17 +253,17 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ----------------------------------------------------
-// ROTAS DO PAINEL DO USUÁRIO (DASHBOARD MATRIZ Epi)
+// ROTAS DO PAINEL DO USUÃRIO (DASHBOARD MATRIZ Epi)
 // ----------------------------------------------------
 
-// 4. Obter Estatísticas da Matriz 3x3 Fechada (39 Pessoas)
+// 4. Obter EstatÃ­sticas da Matriz 3x3 Fechada (39 Pessoas)
 app.get('/api/user/dashboard', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
     const currentUser = await findUserByEmail(req.user.email);
 
     if (!currentUser) {
-      return res.status(404).json({ error: 'Usuário não encontrado.' });
+      return res.status(404).json({ error: 'UsuÃ¡rio nÃ£o encontrado.' });
     }
 
     let sponsorName = 'Nenhum (Sistema Raiz)';
@@ -307,15 +307,15 @@ app.get('/api/user/dashboard', authenticateToken, async (req, res) => {
   }
 });
 
-// 5. Árvore da Matriz 3x3
+// 5. Ãrvore da Matriz 3x3
 app.get('/api/user/tree', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
     const tree = await getLspcTreeStructure(userId);
     res.json({ tree });
   } catch (error) {
-    console.error('Erro ao carregar árvore Epi:', error);
-    res.status(500).json({ error: 'Erro ao carregar estrutura da árvore.' });
+    console.error('Erro ao carregar Ã¡rvore Epi:', error);
+    res.status(500).json({ error: 'Erro ao carregar estrutura da Ã¡rvore.' });
   }
 });
 
@@ -329,12 +329,12 @@ app.get('/api/admin/users', [authenticateToken, requireAdmin], async (req, res) 
     const users = await getAllUsersWithLspcStats();
     res.json({ users });
   } catch (error) {
-    console.error('Erro ao listar usuários admin:', error);
-    res.status(500).json({ error: 'Erro ao carregar lista de usuários.' });
+    console.error('Erro ao listar usuÃ¡rios admin:', error);
+    res.status(500).json({ error: 'Erro ao carregar lista de usuÃ¡rios.' });
   }
 });
 
-// 7. Exportação CSV da Matriz Epi
+// 7. ExportaÃ§Ã£o CSV da Matriz Epi
 app.get('/api/admin/export', [authenticateToken, requireAdmin], async (req, res) => {
   try {
     const users = await getAllUsersWithLspcStats();
@@ -371,23 +371,23 @@ app.get('/api/admin/export', [authenticateToken, requireAdmin], async (req, res)
   }
 });
 
-// 8. Cadastro Manual de Usuários pelo Administrador
+// 8. Cadastro Manual de UsuÃ¡rios pelo Administrador
 app.post('/api/admin/register-user', [authenticateToken, requireAdmin], async (req, res) => {
   try {
     const { name, email, password, sponsorIdentifier, targetLeg } = req.body;
 
     if (!name || !email || !password || !sponsorIdentifier) {
-      return res.status(400).json({ error: 'Preencha todos os campos obrigatórios (nome, e-mail, senha e patrocinador).' });
+      return res.status(400).json({ error: 'Preencha todos os campos obrigatÃ³rios (nome, e-mail, senha e patrocinador).' });
     }
 
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
-      return res.status(400).json({ error: 'Este e-mail já está cadastrado no sistema.' });
+      return res.status(400).json({ error: 'Este e-mail jÃ¡ estÃ¡ cadastrado no sistema.' });
     }
 
     const sponsor = await findUserByIdentifier(sponsorIdentifier);
     if (!sponsor) {
-      return res.status(400).json({ error: 'Patrocinador selecionado não foi encontrado.' });
+      return res.status(400).json({ error: 'Patrocinador selecionado nÃ£o foi encontrado.' });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -407,39 +407,39 @@ app.post('/api/admin/register-user', [authenticateToken, requireAdmin], async (r
       user: newUser
     });
   } catch (error) {
-    console.error('Erro ao cadastrar usuário pelo Admin:', error);
+    console.error('Erro ao cadastrar usuÃ¡rio pelo Admin:', error);
     res.status(500).json({ error: 'Erro interno ao processar o cadastro manual.' });
   }
 });
 
-// 9. Alterar Perfil/Role do Usuário (Admin / User)
+// 9. Alterar Perfil/Role do UsuÃ¡rio (Admin / User)
 app.patch('/api/admin/users/:id/role', [authenticateToken, requireAdmin], async (req, res) => {
   try {
     const userId = parseInt(req.params.id, 10);
     const { role } = req.body;
 
     if (!role || !['admin', 'user'].includes(role)) {
-      return res.status(400).json({ error: 'Perfil inválido. Deve ser "admin" ou "user".' });
+      return res.status(400).json({ error: 'Perfil invÃ¡lido. Deve ser "admin" ou "user".' });
     }
 
     if (userId === 1 || userId === req.user.id) {
       if (role === 'user') {
-        return res.status(400).json({ error: 'Não é possível remover as permissões do Administrador Raiz principal.' });
+        return res.status(400).json({ error: 'NÃ£o Ã© possÃ­vel remover as permissÃµes do Administrador Raiz principal.' });
       }
     }
 
     const updatedUser = await updateUserRole(userId, role);
     res.json({
-      message: `Perfil do usuário #${userId} alterado para "${role}" com sucesso!`,
+      message: `Perfil do usuÃ¡rio #${userId} alterado para "${role}" com sucesso!`,
       user: updatedUser
     });
   } catch (error) {
-    console.error('Erro ao alterar perfil do usuário:', error);
-    res.status(500).json({ error: 'Erro ao alterar perfil do usuário.' });
+    console.error('Erro ao alterar perfil do usuÃ¡rio:', error);
+    res.status(500).json({ error: 'Erro ao alterar perfil do usuÃ¡rio.' });
   }
 });
 
-// 10. Redefinir Senha do Usuário pelo Administrador
+// 10. Redefinir Senha do UsuÃ¡rio pelo Administrador
 app.post('/api/admin/users/:id/reset-password', [authenticateToken, requireAdmin], async (req, res) => {
   try {
     const userId = parseInt(req.params.id, 10);
@@ -452,14 +452,14 @@ app.post('/api/admin/users/:id/reset-password', [authenticateToken, requireAdmin
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await updateUserPassword(userId, passwordHash);
 
-    res.json({ message: `Senha do usuário #${userId} redefinida com sucesso!` });
+    res.json({ message: `Senha do usuÃ¡rio #${userId} redefinida com sucesso!` });
   } catch (error) {
     console.error('Erro ao redefinir senha pelo admin:', error);
-    res.status(500).json({ error: 'Erro interno ao redefinir a senha do usuário.' });
+    res.status(500).json({ error: 'Erro interno ao redefinir a senha do usuÃ¡rio.' });
   }
 });
 
-// 11. Redefinição de Senha pelo Próprio Usuário (Recuperação no Login)
+// 11. RedefiniÃ§Ã£o de Senha pelo PrÃ³prio UsuÃ¡rio (RecuperaÃ§Ã£o no Login)
 app.post('/api/auth/reset-password', async (req, res) => {
   try {
     const { email, newPassword } = req.body;
@@ -469,7 +469,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
 
     if (newPassword.trim().length < 4) {
-      return res.status(400).json({ error: 'A nova senha deve ter no mínimo 4 caracteres.' });
+      return res.status(400).json({ error: 'A nova senha deve ter no mÃ­nimo 4 caracteres.' });
     }
 
     const user = await findUserByEmail(email);
@@ -480,9 +480,9 @@ app.post('/api/auth/reset-password', async (req, res) => {
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await updateUserPassword(user.id, passwordHash);
 
-    res.json({ message: 'Sua senha foi redefinida com sucesso! Você já pode acessar sua conta.' });
+    res.json({ message: 'Sua senha foi redefinida com sucesso! VocÃª jÃ¡ pode acessar sua conta.' });
   } catch (error) {
-    console.error('Erro na redefinição de senha:', error);
+    console.error('Erro na redefiniÃ§Ã£o de senha:', error);
     res.status(500).json({ error: 'Erro ao redefinir a senha.' });
   }
 });
@@ -491,7 +491,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
 // ROTAS DE CARTEIRA DIGITAL E SAQUES PIX (WALLET)
 // ----------------------------------------------------
 
-// 12. Obter Carteira Digital do Usuário
+// 12. Obter Carteira Digital do UsuÃ¡rio
 app.get('/api/user/wallet', authenticateToken, async (req, res) => {
   try {
     const wallet = await getUserWallet(req.user.id);
@@ -513,12 +513,12 @@ app.post('/api/user/withdraw', authenticateToken, async (req, res) => {
 
     const withdrawal = await requestWithdrawal(req.user.id, amount, pixKey);
     res.status(201).json({
-      message: 'Solicitação de saque PIX realizada com sucesso!',
+      message: 'SolicitaÃ§Ã£o de saque PIX realizada com sucesso!',
       withdrawal
     });
   } catch (error) {
     console.error('Erro ao solicitar saque PIX:', error);
-    res.status(400).json({ error: error.message || 'Erro ao processar solicitação de saque.' });
+    res.status(400).json({ error: error.message || 'Erro ao processar solicitaÃ§Ã£o de saque.' });
   }
 });
 
@@ -529,7 +529,7 @@ app.get('/api/admin/withdrawals', [authenticateToken, requireAdmin], async (req,
     res.json({ withdrawals });
   } catch (error) {
     console.error('Erro ao listar saques para admin:', error);
-    res.status(500).json({ error: 'Erro ao carregar solicitações de saque.' });
+    res.status(500).json({ error: 'Erro ao carregar solicitaÃ§Ãµes de saque.' });
   }
 });
 
@@ -540,7 +540,7 @@ app.patch('/api/admin/withdrawals/:id', [authenticateToken, requireAdmin], async
     const { action } = req.body;
 
     if (!['approve', 'reject'].includes(action)) {
-      return res.status(400).json({ error: 'Ação inválida. Escolha "approve" ou "reject".' });
+      return res.status(400).json({ error: 'AÃ§Ã£o invÃ¡lida. Escolha "approve" ou "reject".' });
     }
 
     const result = await processWithdrawal(withdrawalId, action);
@@ -551,7 +551,7 @@ app.patch('/api/admin/withdrawals/:id', [authenticateToken, requireAdmin], async
   }
 });
 
-// 16. Alterar Status de Ativação Mensal do Afiliado (Admin)
+// 16. Alterar Status de AtivaÃ§Ã£o Mensal do Afiliado (Admin)
 app.patch('/api/admin/users/:id/active', [authenticateToken, requireAdmin], async (req, res) => {
   try {
     const userId = parseInt(req.params.id, 10);
@@ -559,17 +559,17 @@ app.patch('/api/admin/users/:id/active', [authenticateToken, requireAdmin], asyn
 
     const updated = await setUserActiveStatus(userId, Boolean(isActive));
     res.json({
-      message: `Status de ativação do usuário #${userId} alterado para "${updated.is_active ? 'ATIVO' : 'INATIVO'}"!`,
+      message: `Status de ativaÃ§Ã£o do usuÃ¡rio #${userId} alterado para "${updated.is_active ? 'ATIVO' : 'INATIVO'}"!`,
       user: updated
     });
   } catch (error) {
-    console.error('Erro ao alterar ativação do usuário:', error);
-    res.status(500).json({ error: 'Erro ao atualizar ativação mensal.' });
+    console.error('Erro ao alterar ativaÃ§Ã£o do usuÃ¡rio:', error);
+    res.status(500).json({ error: 'Erro ao atualizar ativaÃ§Ã£o mensal.' });
   }
 });
 
 // ----------------------------------------------------
-// ROTAS DO MÓDULO LMS (CURSOS, AULAS E ÁREA DE MEMBROS)
+// ROTAS DO MÃ“DULO LMS (CURSOS, AULAS E ÃREA DE MEMBROS)
 // ----------------------------------------------------
 
 // 17. Listar Cursos Liberados para o Afiliado
@@ -579,11 +579,11 @@ app.get('/api/courses', authenticateToken, async (req, res) => {
     res.json({ courses });
   } catch (error) {
     console.error('Erro ao listar cursos LMS:', error);
-    res.status(500).json({ error: 'Erro ao carregar catálogo de cursos.' });
+    res.status(500).json({ error: 'Erro ao carregar catÃ¡logo de cursos.' });
   }
 });
 
-// 18. Obter Estrutura Completa do Curso e Aulas (Com Trava de Ativação)
+// 18. Obter Estrutura Completa do Curso e Aulas (Com Trava de AtivaÃ§Ã£o)
 app.get('/api/courses/:id', authenticateToken, async (req, res) => {
   try {
     const courseId = parseInt(req.params.id, 10);
@@ -593,11 +593,11 @@ app.get('/api/courses/:id', authenticateToken, async (req, res) => {
 
     const isActiveUser = currentUser && currentUser.is_active !== false;
 
-    // Se o usuário estiver INATIVO, bloqueia os links de vídeo
+    // Se o usuÃ¡rio estiver INATIVO, bloqueia os links de vÃ­deo
     if (!isActiveUser) {
       course.modules.forEach(m => {
         m.lessons.forEach(l => {
-          l.video_url = null; // Remove link do vídeo para usuários inativos
+          l.video_url = null; // Remove link do vÃ­deo para usuÃ¡rios inativos
         });
       });
     }
@@ -609,11 +609,11 @@ app.get('/api/courses/:id', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao carregar detalhes do curso LMS:', error);
-    res.status(404).json({ error: error.message || 'Curso não encontrado.' });
+    res.status(404).json({ error: error.message || 'Curso nÃ£o encontrado.' });
   }
 });
 
-// 19. Marcar / Desmarcar Aula como Concluída
+// 19. Marcar / Desmarcar Aula como ConcluÃ­da
 app.post('/api/user/lessons/:id/complete', authenticateToken, async (req, res) => {
   try {
     const lessonId = parseInt(req.params.id, 10);
@@ -621,11 +621,11 @@ app.post('/api/user/lessons/:id/complete', authenticateToken, async (req, res) =
     res.json(result);
   } catch (error) {
     console.error('Erro ao salvar progresso da aula:', error);
-    res.status(500).json({ error: 'Erro ao atualizar conclusão da aula.' });
+    res.status(500).json({ error: 'Erro ao atualizar conclusÃ£o da aula.' });
   }
 });
 
-// --- ROTAS DE GESTÃO DO ADMIN (CRUD DE CURSOS, MÓDULOS E AULAS) ---
+// --- ROTAS DE GESTÃƒO DO ADMIN (CRUD DE CURSOS, MÃ“DULOS E AULAS) ---
 
 // 20. Listar Todos os Cursos (Admin)
 app.get('/api/admin/courses', [authenticateToken, requireAdmin], async (req, res) => {
@@ -634,7 +634,7 @@ app.get('/api/admin/courses', [authenticateToken, requireAdmin], async (req, res
     res.json({ courses });
   } catch (error) {
     console.error('Erro ao listar cursos para admin:', error);
-    res.status(500).json({ error: 'Erro ao carregar cursos para gestão.' });
+    res.status(500).json({ error: 'Erro ao carregar cursos para gestÃ£o.' });
   }
 });
 
@@ -642,7 +642,7 @@ app.get('/api/admin/courses', [authenticateToken, requireAdmin], async (req, res
 app.post('/api/admin/courses', [authenticateToken, requireAdmin], async (req, res) => {
   try {
     const { title, description, thumbnail_url, is_published } = req.body;
-    if (!title) return res.status(400).json({ error: 'O título do curso é obrigatório.' });
+    if (!title) return res.status(400).json({ error: 'O tÃ­tulo do curso Ã© obrigatÃ³rio.' });
 
     const newCourse = await createCourse({ title, description, thumbnail_url, is_published });
     res.status(201).json({ message: 'Curso criado com sucesso!', course: newCourse });
@@ -670,48 +670,48 @@ app.delete('/api/admin/courses/:id', [authenticateToken, requireAdmin], async (r
   try {
     const courseId = parseInt(req.params.id, 10);
     await deleteCourse(courseId);
-    res.json({ message: 'Curso excluído com sucesso!' });
+    res.json({ message: 'Curso excluÃ­do com sucesso!' });
   } catch (error) {
     console.error('Erro ao excluir curso:', error);
     res.status(500).json({ error: error.message || 'Erro ao excluir curso.' });
   }
 });
 
-// 24. Criar Módulo no Curso (Admin)
+// 24. Criar MÃ³dulo no Curso (Admin)
 app.post('/api/admin/modules', [authenticateToken, requireAdmin], async (req, res) => {
   try {
     const { course_id, title, order_index } = req.body;
-    if (!course_id || !title) return res.status(400).json({ error: 'Curso e título do módulo são obrigatórios.' });
+    if (!course_id || !title) return res.status(400).json({ error: 'Curso e tÃ­tulo do mÃ³dulo sÃ£o obrigatÃ³rios.' });
 
     const newModule = await createModule({ course_id, title, order_index: parseInt(order_index, 10) || 1 });
-    res.status(201).json({ message: 'Módulo adicionado com sucesso!', module: newModule });
+    res.status(201).json({ message: 'MÃ³dulo adicionado com sucesso!', module: newModule });
   } catch (error) {
-    console.error('Erro ao criar módulo:', error);
-    res.status(500).json({ error: error.message || 'Erro ao criar módulo.' });
+    console.error('Erro ao criar mÃ³dulo:', error);
+    res.status(500).json({ error: error.message || 'Erro ao criar mÃ³dulo.' });
   }
 });
 
-// 25. Excluir Módulo (Admin)
+// 25. Excluir MÃ³dulo (Admin)
 app.delete('/api/admin/modules/:id', [authenticateToken, requireAdmin], async (req, res) => {
   try {
     const moduleId = parseInt(req.params.id, 10);
     await deleteModule(moduleId);
-    res.json({ message: 'Módulo excluído com sucesso!' });
+    res.json({ message: 'MÃ³dulo excluÃ­do com sucesso!' });
   } catch (error) {
-    console.error('Erro ao excluir módulo:', error);
-    res.status(500).json({ error: error.message || 'Erro ao excluir módulo.' });
+    console.error('Erro ao excluir mÃ³dulo:', error);
+    res.status(500).json({ error: error.message || 'Erro ao excluir mÃ³dulo.' });
   }
 });
 
-// 26. Criar Aula no Módulo (Admin)
+// 26. Criar Aula no MÃ³dulo (Admin)
 app.post('/api/admin/lessons', [authenticateToken, requireAdmin], async (req, res) => {
   try {
-    console.log('DEBUG: Recebendo requisição POST /api/admin/lessons');
+    console.log('DEBUG: Recebendo requisiÃ§Ã£o POST /api/admin/lessons');
     console.log('DEBUG: body:', req.body);
     const { module_id, title, description, video_url, duration, order_index } = req.body;
     if (!module_id || !title || !video_url) {
-      console.log('ERRO: Validação falhou. body:', req.body);
-      return res.status(400).json({ error: 'Módulo, título e link do vídeo são obrigatórios.' });
+      console.log('ERRO: ValidaÃ§Ã£o falhou. body:', req.body);
+      return res.status(400).json({ error: 'MÃ³dulo, tÃ­tulo e link do vÃ­deo sÃ£o obrigatÃ³rios.' });
     }
 
     const newLesson = await createLesson({
@@ -735,7 +735,7 @@ app.delete('/api/admin/lessons/:id', [authenticateToken, requireAdmin], async (r
   try {
     const lessonId = parseInt(req.params.id, 10);
     await deleteLesson(lessonId);
-    res.json({ message: 'Aula excluída com sucesso!' });
+    res.json({ message: 'Aula excluÃ­da com sucesso!' });
   } catch (error) {
     console.error('Erro ao excluir aula:', error);
     res.status(500).json({ error: error.message || 'Erro ao excluir aula.' });
@@ -766,7 +766,7 @@ app.post('/api/admin/quizzes/:id/questions', [authenticateToken, requireAdmin], 
   }
 });
 
-// 31. Listar Quizzes de um Módulo
+// 31. Listar Quizzes de um MÃ³dulo
 app.get('/api/modules/:id/quizzes', authenticateToken, async (req, res) => {
   try {
     const quizzes = await getQuizzesByModule(req.params.id);
@@ -780,7 +780,7 @@ app.get('/api/modules/:id/quizzes', authenticateToken, async (req, res) => {
 app.delete('/api/admin/quizzes/:id', [authenticateToken, requireAdmin], async (req, res) => {
   try {
     await deleteQuiz(req.params.id);
-    res.json({ message: 'Quiz excluído!' });
+    res.json({ message: 'Quiz excluÃ­do!' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -790,7 +790,7 @@ app.delete('/api/admin/quizzes/:id', [authenticateToken, requireAdmin], async (r
 app.delete('/api/admin/questions/:id', [authenticateToken, requireAdmin], async (req, res) => {
   try {
     await deleteQuestion(req.params.id);
-    res.json({ message: 'Pergunta excluída!' });
+    res.json({ message: 'Pergunta excluÃ­da!' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -806,7 +806,7 @@ app.post('/api/quizzes/:id/submit', authenticateToken, async (req, res) => {
   }
 });
 
-// 36. Verificar Conclusão e Gerar Dados do Certificado
+// 36. Verificar ConclusÃ£o e Gerar Dados do Certificado
 app.get('/api/user/courses/:id/certificate', authenticateToken, async (req, res) => {
   try {
     const courseId = parseInt(req.params.id, 10);
@@ -815,7 +815,7 @@ app.get('/api/user/courses/:id/certificate', authenticateToken, async (req, res)
     const isCompleted = await checkCourseCompletion(userId, courseId);
 
     if (!isCompleted) {
-      return res.status(403).json({ error: 'Curso ainda não concluído.' });
+      return res.status(403).json({ error: 'Curso ainda nÃ£o concluÃ­do.' });
     }
 
     const courseDetails = await getCourseDetails(courseId);
@@ -852,7 +852,7 @@ app.get('/api/cycles', authenticateToken, async (req, res) => {
   }
 });
 
-// 38. Progresso de ciclos do usuário
+// 38. Progresso de ciclos do usuÃ¡rio
 app.get('/api/user/cycles', authenticateToken, async (req, res) => {
   try {
     const progress = await getUserCycleProgress(req.user.id);
@@ -871,7 +871,7 @@ app.get('/api/user/cycles', authenticateToken, async (req, res) => {
       progress
     });
   } catch (error) {
-    console.error('Erro ao buscar ciclos do usuário:', error);
+    console.error('Erro ao buscar ciclos do usuÃ¡rio:', error);
     res.status(500).json({ error: 'Erro ao carregar progresso de ciclos.' });
   }
 });
@@ -890,18 +890,18 @@ app.post('/api/user/upgrade', authenticateToken, async (req, res) => {
   }
 });
 
-// 40. Extrato de transações do usuário
+// 40. Extrato de transaÃ§Ãµes do usuÃ¡rio
 app.get('/api/user/transactions', authenticateToken, async (req, res) => {
   try {
     const transactions = await getUserTransactions(req.user.id, 50);
     res.json({ transactions });
   } catch (error) {
-    console.error('Erro ao buscar transações:', error);
+    console.error('Erro ao buscar transaÃ§Ãµes:', error);
     res.status(500).json({ error: 'Erro ao carregar extrato.' });
   }
 });
 
-// 41. Envios do usuário
+// 41. Envios do usuÃ¡rio
 app.get('/api/user/shipments', authenticateToken, async (req, res) => {
   try {
     const shipments = await getUserShipments(req.user.id);
@@ -912,11 +912,11 @@ app.get('/api/user/shipments', authenticateToken, async (req, res) => {
   }
 });
 
-// 42. Dashboard expandido do usuário
+// 42. Dashboard expandido do usuÃ¡rio
 app.get('/api/user/dashboard-full', authenticateToken, async (req, res) => {
   try {
     const data = await getUserDashboardData(req.user.id);
-    if (!data) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    if (!data) return res.status(404).json({ error: 'UsuÃ¡rio nÃ£o encontrado.' });
     res.json(data);
   } catch (error) {
     console.error('Erro ao carregar dashboard completo:', error);
@@ -957,14 +957,14 @@ app.put('/api/admin/cycles/:id', [authenticateToken, requireAdmin], async (req, 
   }
 });
 
-// 45. Todas as transações (admin)
+// 45. Todas as transaÃ§Ãµes (admin)
 app.get('/api/admin/transactions', [authenticateToken, requireAdmin], async (req, res) => {
   try {
     const transactions = await getAllTransactions(200);
     res.json({ transactions });
   } catch (error) {
-    console.error('Erro ao listar transações admin:', error);
-    res.status(500).json({ error: 'Erro ao carregar transações.' });
+    console.error('Erro ao listar transaÃ§Ãµes admin:', error);
+    res.status(500).json({ error: 'Erro ao carregar transaÃ§Ãµes.' });
   }
 });
 
@@ -985,7 +985,7 @@ app.patch('/api/admin/shipments/:id', [authenticateToken, requireAdmin], async (
     const shipmentId = parseInt(req.params.id, 10);
     const { status, tracking_code } = req.body;
     if (!status || !['pending', 'shipped', 'delivered'].includes(status)) {
-      return res.status(400).json({ error: 'Status inválido.' });
+      return res.status(400).json({ error: 'Status invÃ¡lido.' });
     }
     const updated = await updateShipmentStatus(shipmentId, status, tracking_code);
     res.json({ message: 'Envio atualizado!', shipment: updated });
@@ -996,7 +996,7 @@ app.patch('/api/admin/shipments/:id', [authenticateToken, requireAdmin], async (
 });
 
 // ----------------------------------------------------
-// WEBHOOK HOTMART — Pagamento Aprovado
+// WEBHOOK HOTMART â€” Pagamento Aprovado
 // ----------------------------------------------------
 app.post('/api/webhooks/hotmart', async (req, res) => {
   try {
@@ -1008,7 +1008,7 @@ app.post('/api/webhooks/hotmart', async (req, res) => {
       const digest = hmac.digest('base64');
 
       if (digest !== req.headers['x-hotmart-hmac-sha256']) {
-        console.warn('⚠️ [Hotmart Webhook] Assinatura HMAC inválida. Rejeitando.');
+        console.warn('âš ï¸ [Hotmart Webhook] Assinatura HMAC invÃ¡lida. Rejeitando.');
         return res.status(401).json({ error: 'Invalid signature' });
       }
     }
@@ -1017,14 +1017,14 @@ app.post('/api/webhooks/hotmart', async (req, res) => {
     const { event, data } = req.body;
 
     if (!event || !data) {
-      return res.status(400).json({ error: 'Payload inválido: event e data são obrigatórios.' });
+      return res.status(400).json({ error: 'Payload invÃ¡lido: event e data sÃ£o obrigatÃ³rios.' });
     }
 
-    console.log(`📬 [Hotmart Webhook] Evento recebido: ${event}`);
+    console.log(`ðŸ“¬ [Hotmart Webhook] Evento recebido: ${event}`);
 
     // 3. Processar apenas pagamento aprovado
     if (event !== 'PURCHASE_APPROVED') {
-      console.log(`ℹ️ [Hotmart Webhook] Evento ignorado: ${event}`);
+      console.log(`â„¹ï¸ [Hotmart Webhook] Evento ignorado: ${event}`);
       return res.status(200).json({ message: 'Evento ignorado.' });
     }
 
@@ -1033,7 +1033,7 @@ app.post('/api/webhooks/hotmart', async (req, res) => {
     const productId = data.product?.id;
 
     if (!buyerEmail || !productId) {
-      console.error('❌ [Hotmart Webhook] Dados incompletos:', { buyerEmail, productId });
+      console.error('âŒ [Hotmart Webhook] Dados incompletos:', { buyerEmail, productId });
       return res.status(400).json({ error: 'Dados do comprador ou produto incompletos.' });
     }
 
@@ -1045,24 +1045,32 @@ app.post('/api/webhooks/hotmart', async (req, res) => {
     });
 
     if (!result.success) {
-      console.error(`❌ [Hotmart Webhook] Falha ao processar: ${result.reason}`);
+      console.error(`âŒ [Hotmart Webhook] Falha ao processar: ${result.reason}`);
       return res.status(200).json({ message: 'Webhook received but not processed.', reason: result.reason });
     }
 
-    console.log(`✅ [Hotmart Webhook] Compra processada: ${buyerEmail} → Ciclo ${result.cycle}`);
+    console.log(`âœ… [Hotmart Webhook] Compra processada: ${buyerEmail} â†’ Ciclo ${result.cycle}`);
     return res.status(200).json({ message: 'Purchase processed successfully.', cycle: result.cycle });
 
   } catch (error) {
-    console.error('❌ [Hotmart Webhook] Erro interno:', error);
+    console.error('âŒ [Hotmart Webhook] Erro interno:', error);
     return res.status(200).json({ message: 'Webhook received with error.' });
   }
 });
 
 // ----------------------------------------------------
+// CATCH-ALL: Serve o React app para qualquer rota
+// ----------------------------------------------------
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist', 'index.html'));
+});
+
+
+// ----------------------------------------------------
 // HANDLER GLOBAL DE ERROS (sempre retorna JSON)
 // ----------------------------------------------------
 app.use((err, req, res, next) => {
-  console.error('Erro não tratado:', err);
+  console.error('Erro nÃ£o tratado:', err);
   res.status(500).json({ error: 'Erro interno no servidor. Tente novamente mais tarde.' });
 });
 
@@ -1075,10 +1083,11 @@ initDb()
   .then(async () => {
     await seedCycles();
     app.listen(PORT, () => {
-      console.log(`🚀 Servidor Matriz 3x3 Epi rodando na porta ${PORT}`);
-      console.log(`🔗 API endpoint: http://localhost:${PORT}/api`);
+      console.log(`ðŸš€ Servidor Matriz 3x3 Epi rodando na porta ${PORT}`);
+      console.log(`ðŸ”— API endpoint: http://localhost:${PORT}/api`);
     });
   })
   .catch(err => {
     console.error('Falha ao inicializar banco de dados:', err);
   });
+
