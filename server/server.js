@@ -1079,15 +1079,14 @@ process.on('unhandledRejection', (reason) => {
   console.error('Unhandled Rejection:', reason);
 });
 
-initDb()
-  .then(async () => {
+app.listen(PORT, async () => {
+  console.log("Servidor Matriz 3x3 Epi rodando na porta " + PORT);
+  console.log("API endpoint: http://localhost:" + PORT + "/api");
+  try {
+    await initDb();
     await seedCycles();
-    app.listen(PORT, () => {
-      console.log(`ðŸš€ Servidor Matriz 3x3 Epi rodando na porta ${PORT}`);
-      console.log(`ðŸ”— API endpoint: http://localhost:${PORT}/api`);
-    });
-  })
-  .catch(err => {
-    console.error('Falha ao inicializar banco de dados:', err);
-  });
-
+    console.log("Banco de dados inicializado com sucesso!");
+  } catch (err) {
+    console.error("Banco de dados indisponivel. Servidor rodando sem DB:", err.message);
+  }
+});
