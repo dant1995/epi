@@ -1,7 +1,7 @@
-﻿{
+{
   "name": "multinivel-afiliados",
   "version": "1.0.0",
-  "description": "Sistema de Afiliados Unilevel em Arvore em Multiplos Niveis",
+  "description": "Sistema de Afiliados Unilevel",
   "main": "server/server.js",
   "scripts": {
     "start": "npm run build && node server/server.js",
@@ -9,13 +9,7 @@
     "dev": "vite",
     "server": "node server/server.js"
   },
-  "keywords": [
-    "unilevel",
-    "afiliados",
-    "mlm",
-    "tree",
-    "referral"
-  ],
+  "keywords": ["unilevel", "afiliados", "mlm", "tree", "referral"],
   "author": "",
   "license": "ISC",
   "dependencies": {
