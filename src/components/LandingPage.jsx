@@ -152,7 +152,7 @@ export default function LandingPage({ onNavigate }) {
       {/* ========== BANNER ========== */}
       <div style={{ width: '100%', overflow: 'hidden' }}>
         <img
-          src="/banner-epi.jpg"
+          src="/benner.png"
           alt="EPI - Elevation Prosperity International"
           style={{
             width: '100%',
