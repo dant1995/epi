@@ -149,6 +149,21 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </header>
 
+      {/* ========== BANNER ========== */}
+      <div style={{ width: '100%', overflow: 'hidden' }}>
+        <img
+          src="/banner-epi.jpg"
+          alt="EPI - Elevation Prosperity International"
+          style={{
+            width: '100%',
+            height: 'auto',
+            display: 'block',
+            maxHeight: '350px',
+            objectFit: 'cover'
+          }}
+        />
+      </div>
+
       {/* ========== HERO ========== */}
       <section style={{
         padding: '5rem 2rem 4rem', textAlign: 'center', position: 'relative',
