@@ -18,7 +18,7 @@ export default function CoursesLms({ token }) {
   const [certificateData, setCertificateData] = useState(null);
   const [userCycle, setUserCycle] = useState(null);
 
-  // Carregar catálogo de cursos
+  // Cargar catálogo de cursos
   const fetchCourses = async () => {
     setLoading(true);
     try {
@@ -26,7 +26,7 @@ export default function CoursesLms({ token }) {
         fetch('/api/courses', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/user/cycles', { headers: { Authorization: `Bearer ${token}` } })
       ]);
-      if (!coursesRes.ok) throw new Error('Falha ao carregar catálogo de cursos.');
+      if (!coursesRes.ok) throw new Error('Error al cargar catálogo de cursos.');
       const data = await coursesRes.json();
       const cyclesData = cyclesRes.ok ? await cyclesRes.json() : {};
       setCourses(data.courses || []);
@@ -42,7 +42,7 @@ export default function CoursesLms({ token }) {
     fetchCourses();
   }, [token]);
 
-  // Carregar detalhes do curso e quizzes
+  // Cargar detalles del curso y quizzes
   const handleSelectCourse = async (courseId) => {
     setDetailsLoading(true);
     setSelectedCourse(courseId);
@@ -50,7 +50,7 @@ export default function CoursesLms({ token }) {
       const res = await fetch(`/api/courses/${courseId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Falha ao carregar aulas do curso.');
+      if (!res.ok) throw new Error('Error al cargar las clases del curso.');
       const data = await res.json();
 
       setCourseDetails(data.course);
@@ -62,7 +62,7 @@ export default function CoursesLms({ token }) {
       setCurrentQuiz(null);
       setQuizResult(null);
 
-      // Selecionar primeira aula por padrão
+      // Seleccionar primera clase por defecto
       if (data.course.modules && data.course.modules.length > 0) {
         const firstMod = data.course.modules[0];
         if (firstMod.lessons && firstMod.lessons.length > 0) {
@@ -87,7 +87,7 @@ export default function CoursesLms({ token }) {
         },
         body: JSON.stringify({ answers: quizAnswers })
       });
-      if (!res.ok) throw new Error('Erro ao submeter quiz.');
+      if (!res.ok) throw new Error('Error al enviar quiz.');
       const data = await res.json();
       setQuizResult(data.attempt);
     } catch (err) {
@@ -95,14 +95,14 @@ export default function CoursesLms({ token }) {
     }
   };
 
-  // Marcar/Desmarcar aula como concluída
+  // Marcar/Desmarcar clase como completada
   const handleToggleComplete = async (lessonId) => {
     try {
       const res = await fetch(`/api/user/lessons/${lessonId}/complete`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Erro ao salvar conclusão.');
+      if (!res.ok) throw new Error('Error al guardar progreso.');
 
       const data = await res.json();
       if (data.completed) {
@@ -120,7 +120,7 @@ export default function CoursesLms({ token }) {
       const res = await fetch(`/api/user/courses/${courseId}/certificate`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Erro ao gerar certificado.');
+      if (!res.ok) throw new Error('Error al generar certificado.');
       const data = await res.json();
       setCertificateData(data.certificate);
       setShowCertificateModal(true);
@@ -130,7 +130,7 @@ export default function CoursesLms({ token }) {
   };
 
 
-  // Helper para formatar URL de Vídeo (YouTube embed ou HTML5)
+  // Helper para formatear URL de Video (YouTube embed o HTML5)
   const renderVideoPlayer = (url) => {
     if (!url) return null;
 
@@ -147,7 +147,7 @@ export default function CoursesLms({ token }) {
       return (
         <iframe
           src={embedUrl}
-          title="Vídeo-aula"
+          title="Video-clase"
           style={{ width: '100%', height: '100%', border: 'none', borderRadius: '12px' }}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
@@ -169,12 +169,12 @@ export default function CoursesLms({ token }) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
         <RefreshCw size={32} className="animate-spin" style={{ margin: '0 auto 1rem', display: 'block' }} />
-        Carregando Área de Membros (LMS)...
+        Cargando Área de Miembros (LMS)...
       </div>
     );
   }
 
-  // --- VISÃO 1: CATÁLOGO DE CURSOS ---
+  // --- VISIÓN 1: CATÁLOGO DE CURSOS ---
   if (!selectedCourse || !courseDetails) {
     return (
       <div>
@@ -182,10 +182,10 @@ export default function CoursesLms({ token }) {
           <div>
             <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <BookOpen size={26} style={{ color: 'var(--accent-cyan)' }} />
-              Área de Membros & Cursos LMS
+              Área de Miembros & Cursos LMS
             </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-              Treinamentos exclusivos para capacitação de afiliados e líderes da Matriz Epi 3x3
+              Capacitaciones exclusivas para formación de afiliados y líderes de la Matriz Epi 3x3
             </p>
           </div>
         </div>
@@ -193,16 +193,16 @@ export default function CoursesLms({ token }) {
         {courses.length === 0 ? (
           <div className="glass-card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
             <BookOpen size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-            <h3>Nenhum curso disponível no momento.</h3>
+            <h3>Ningún curso disponible en este momento.</h3>
             <p style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
-              Novos treinamentos e vídeo-aulas serão adicionados em breve pelo administrador!
+              Nuevas capacitaciones y video-clases serán añadidas pronto por el administrador!
             </p>
           </div>
         ) : (
           <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'rgba(59,130,246,0.1)', borderRadius: '8px', border: '1px solid rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <Award size={20} style={{ color: '#60a5fa' }} />
             <span style={{ fontSize: '0.9rem', color: '#93c5fd' }}>
-              Seu ciclo atual: <strong>{userCycle?.display_name || 'Bronze'}</strong> — Acesse cursos do seu nível ou superior.
+              Su ciclo actual: <strong>{userCycle?.display_name || 'Bronze'}</strong> — Acceda a cursos de su nivel o superior.
             </span>
           </div>
         )}
@@ -246,7 +246,7 @@ export default function CoursesLms({ token }) {
                         padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 700, color: '#fff',
                         display: 'flex', alignItems: 'center', gap: '0.3rem'
                       }}>
-                        <Lock size={12} /> Requer ciclo superior
+                        <Lock size={12} /> Requiere ciclo superior
                       </div>
                     )}
                   </div>
@@ -256,7 +256,7 @@ export default function CoursesLms({ token }) {
                       {course.title}
                     </h3>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.4', marginBottom: '1.25rem', flex: 1 }}>
-                      {course.description || 'Sem descrição.'}
+                      {course.description || 'Sin descripción.'}
                     </p>
 
                     <button
@@ -274,7 +274,7 @@ export default function CoursesLms({ token }) {
                       onClick={() => isAccessible && handleSelectCourse(course.id)}
                       disabled={!isAccessible}
                     >
-                      {isAccessible ? <><PlayCircle size={18} /> Acessar Curso</> : <><Lock size={18} /> Ciclo Insuficiente</>}
+                      {isAccessible ? <><PlayCircle size={18} /> Acceder al Curso</> : <><Lock size={18} /> Ciclo Insuficiente</>}
                     </button>
                   </div>
                 </div>
@@ -286,9 +286,9 @@ export default function CoursesLms({ token }) {
     );
   }
 
-  // --- VISÃO 2: PLAYER E NAVEGAÇÃO DE AULAS DO CURSO ---
+  // --- VISIÓN 2: REPRODUCTOR Y NAVEGACIÓN DE CLASES DEL CURSO ---
 
-  // Calcular progresso do aluno no curso
+  // Calcular progreso del alumno en el curso
   let totalLessonsInCourse = 0;
   courseDetails.modules?.forEach(m => {
     totalLessonsInCourse += m.lessons?.length || 0;
@@ -298,7 +298,7 @@ export default function CoursesLms({ token }) {
 
   return (
     <div>
-      {/* BOTÃO VOLTAR E CABEÇALHO DO CURSO */}
+      {/* BOTÓN VOLVER Y ENCABEZADO DEL CURSO */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
         <button
           type="button"
@@ -306,7 +306,7 @@ export default function CoursesLms({ token }) {
           onClick={() => { setSelectedCourse(null); setCourseDetails(null); }}
           style={{ cursor: 'pointer', gap: '0.4rem' }}
         >
-          <ArrowLeft size={16} /> Voltar aos Cursos
+          <ArrowLeft size={16} /> Volver a los Cursos
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -317,11 +317,11 @@ export default function CoursesLms({ token }) {
               style={{ cursor: 'pointer', background: 'var(--accent-cyan)', color: '#0f172a', fontWeight: 700 }}
               onClick={() => handleGenerateCertificate(selectedCourse)}
             >
-              <Award size={16} /> Gerar Certificado
+              <Award size={16} /> Generar Certificado
             </button>
           )}
           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            Progresso do Curso: <strong>{completedInCourseCount} / {totalLessonsInCourse} concluidas</strong> ({progressPercent}%)
+            Progreso del Curso: <strong>{completedInCourseCount} / {totalLessonsInCourse} completadas</strong> ({progressPercent}%)
           </div>
           <div style={{ width: '120px', height: '8px', background: '#334155', borderRadius: '4px', overflow: 'hidden' }}>
             <div style={{ width: `${progressPercent}%`, height: '100%', background: 'var(--accent-emerald)', transition: 'width 0.3s' }}></div>
@@ -332,11 +332,11 @@ export default function CoursesLms({ token }) {
       {detailsLoading ? (
         <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
           <RefreshCw size={32} className="animate-spin" style={{ margin: '0 auto 1rem', display: 'block' }} />
-          Carregando conteúdo do curso...
+          Cargando contenido del curso...
         </div>
       ) : (
         <div>
-          {/* TELA DE BLOQUEIO SE O AFILIADO ESTIVER INATIVO */}
+          {/* PANTALLA DE BLOQUEO SI EL AFILIADO ESTÁ INACTIVO */}
           {!isActiveUser ? (
             <div className="glass-card" style={{
               textAlign: 'center', padding: '3.5rem 1.5rem',
@@ -353,22 +353,22 @@ export default function CoursesLms({ token }) {
               </div>
 
               <h2 style={{ color: '#fff', fontSize: '1.6rem', fontWeight: 800 }}>
-                ⚠️ Conteúdo Exclusivo para Membros Ativos
+                ⚠️ Contenido Exclusivo para Miembros Activos
               </h2>
               <p style={{ color: 'var(--text-muted)', maxWidth: '580px', margin: '0.75rem auto 1.75rem', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                Sua conta está no momento com o status <strong>INATIVO</strong> (adesão ou mensalidade pendente).
-                Regularize sua ativação no painel para ter acesso ilimitado a todas as vídeo-aulas, treinamentos e materiais de apoio do sistema EPI!
+                Su cuenta está actualmente con el estado <strong>INACTIVO</strong> (afiliación o cuota pendiente).
+                Regularice su activación en el panel para tener acceso ilimitado a todas las video-clases, capacitaciones y materiales de apoyo del sistema EPI!
               </p>
 
               <div className="sponsor-badge sponsor-badge-invalid" style={{ display: 'inline-flex', marginBottom: 0 }}>
                 <ShieldAlert size={18} />
-                <span>Bloqueio temporário de segurança LMS</span>
+                <span>Bloqueo temporal de seguridad LMS</span>
               </div>
             </div>
           ) : (
-            /* CONTEÚDO LIBERADO PARA AFILIADO ATIVO */
+            /* CONTENIDO LIBERADO PARA AFILIADO ACTIVO */
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: '1.5rem' }} className="lms-layout">
-              {/* AREA DO PLAYER DE VÍDEO E DETALHES DA AULA OU QUIZ */}
+              {/* ÁREA DEL REPRODUCTOR DE VIDEO Y DETALLES DE LA CLASE O QUIZ */}
               <div>
                 {currentLesson ? (
                   <div>
@@ -389,7 +389,7 @@ export default function CoursesLms({ token }) {
                             {currentLesson.title}
                           </h2>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-subtle)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.2rem' }}>
-                            <Clock size={13} /> Duração: {currentLesson.duration || '10:00'}
+                            <Clock size={13} /> Duración: {currentLesson.duration || '10:00'}
                           </span>
                         </div>
 
@@ -405,12 +405,12 @@ export default function CoursesLms({ token }) {
                           onClick={() => handleToggleComplete(currentLesson.id)}
                         >
                           <CheckCircle2 size={16} />
-                          {completedLessons.includes(currentLesson.id) ? 'Aula Concluída ✓' : 'Marcar como Concluída'}
+                          {completedLessons.includes(currentLesson.id) ? 'Clase Completada ✓' : 'Marcar como Completada'}
                         </button>
                       </div>
 
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: '1.6' }}>
-                        {currentLesson.description || 'Sem descrição cadastrada para esta aula.'}
+                        {currentLesson.description || 'Sin descripción registrada para esta clase.'}
                       </p>
                     </div>
                   </div>
@@ -420,7 +420,7 @@ export default function CoursesLms({ token }) {
                     {quizResult ? (
                       <div>
                         <h3>Resultado: {quizResult.score.toFixed(1)}%</h3>
-                        <p>{quizResult.passed ? 'Parabéns, você foi aprovado!' : 'Infelizmente você não atingiu a pontuação mínima. Tente novamente.'}</p>
+                        <p>{quizResult.passed ? '¡Felicitaciones, usted ha aprobado!' : 'Lamentablemente no alcanzó la puntuación mínima. Intente de nuevo.'}</p>
                       </div>
                     ) : (
                       currentQuiz.questions.map((q, idx) => (
@@ -451,27 +451,27 @@ export default function CoursesLms({ token }) {
                     ))
                     )}
                     {!quizResult && (
-                      <button className="btn-submit" onClick={() => handleQuizSubmit(currentQuiz.id)}>Enviar Respostas</button>
+                      <button className="btn-submit" onClick={() => handleQuizSubmit(currentQuiz.id)}>Enviar Respuestas</button>
                     )}
                   </div>
                 ) : (
                   <div className="glass-card" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                    Selecione uma aula ou quiz no menu lateral.
+                    Seleccione una clase o quiz en el menú lateral.
                   </div>
                 )}
               </div>
 
-              {/* MENU LATERAL DE MÓDULOS E AULAS (ACCORDION / LISTA) */}
+              {/* MENÚ LATERAL DE MÓDULOS Y CLASES (ACCORDION / LISTA) */}
               <div>
                 <div className="glass-card" style={{ padding: '1.25rem' }}>
                   <h3 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <Layers size={18} style={{ color: 'var(--accent-cyan)' }} />
-                    Módulos do Curso
+                    Módulos del Curso
                   </h3>
 
                   {(!courseDetails.modules || courseDetails.modules.length === 0) ? (
                     <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '1.5rem 0' }}>
-                      Nenhum módulo cadastrado neste curso.
+                      Ningún módulo registrado en este curso.
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -495,7 +495,7 @@ export default function CoursesLms({ token }) {
                                     /* ... (estilo existente) ... */
                                   }}
                                 >
-                                  {/* ... (conteúdo existente) ... */}
+                                   {/* ... (contenido existente) ... */}
                                 </button>
                               );
                             })}
@@ -538,14 +538,14 @@ export default function CoursesLms({ token }) {
         }}>
           <div className="glass-card" style={{ maxWidth: '600px', width: '100%', border: '2px solid var(--accent-cyan)', background: '#0f172a', textAlign: 'center', padding: '2rem' }}>
             <Award size={48} style={{ color: 'var(--accent-cyan)', margin: '0 auto 1rem' }} />
-            <h2 style={{ color: '#fff', fontSize: '1.8rem', fontWeight: 800 }}>Certificado de Conclusão</h2>
+            <h2 style={{ color: '#fff', fontSize: '1.8rem', fontWeight: 800 }}>Certificado de Finalización</h2>
             <p>Certificamos que</p>
             <h3 style={{ color: 'var(--accent-cyan)', fontSize: '1.4rem' }}>{certificateData.student_name}</h3>
-            <p>concluiu o curso</p>
+            <p>finalizó el curso</p>
             <h4 style={{ color: '#fff', fontSize: '1.2rem' }}>{certificateData.course_title}</h4>
-            <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Data: {certificateData.date}</p>
+            <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Fecha: {certificateData.date}</p>
             <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Hash: {certificateData.verifiable_hash}</p>
-            <button className="nav-btn nav-btn-primary" style={{ marginTop: '1.5rem' }} onClick={() => setShowCertificateModal(false)}>Fechar</button>
+            <button className="nav-btn nav-btn-primary" style={{ marginTop: '1.5rem' }} onClick={() => setShowCertificateModal(false)}>Cerrar</button>
           </div>
         </div>
       )}

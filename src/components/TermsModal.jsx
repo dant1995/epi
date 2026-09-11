@@ -39,7 +39,7 @@ export default function TermsModal({ onClose }) {
 
           <section style={{ marginBottom: '1.5rem' }}>
             <h3 style={{ color: '#fff', fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Award size={18} style={{ color: '#fbbf24' }} /> 1. Descripción de los Ciclos Progressivos
+              <Award size={18} style={{ color: '#fbbf24' }} /> 1. Descripción de los Ciclos Progresivos
             </h3>
             <p style={{ marginBottom: '0.75rem' }}>
               La plataforma EPI ofrece un sistema de marketing multinivel basado en una <strong>Matriz Forzada Cerrada 3×3</strong> con <strong>5 ciclos progressivos</strong>. Cada ciclo otorga acceso a productos digitales, físicos o ambos, según el nivel adquirido.
@@ -60,7 +60,7 @@ export default function TermsModal({ onClose }) {
                     <td style={{ padding: '0.5rem' }}>Curso Básico de Marketing Digital</td>
                   </tr>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <td style={{ padding: '0.5rem', fontWeight: 700 }}>🥈 Prata</td>
+                    <td style={{ padding: '0.5rem', fontWeight: 700 }}>🥈 Plata</td>
                     <td style={{ padding: '0.5rem', textAlign: 'right', color: '#fbbf24', fontWeight: 700 }}>$US 100.00</td>
                     <td style={{ padding: '0.5rem' }}>Módulo Intermediario/Avanzado de Estrategias y Ventas</td>
                   </tr>
@@ -77,7 +77,7 @@ export default function TermsModal({ onClose }) {
                   <tr>
                     <td style={{ padding: '0.5rem', fontWeight: 700 }}>👑 Diamante</td>
                     <td style={{ padding: '0.5rem', textAlign: 'right', color: '#fbbf24', fontWeight: 700 }}>$US 5,000.00</td>
-                    <td style={{ padding: '0.5rem' }}>Kit Alta Performance + Consejo de Estrategia y Mentorías Vitalicio</td>
+                    <td style={{ padding: '0.5rem' }}>Kit Alta Performance + Consejo de Estrategia y Mentorías Vitalicias</td>
                   </tr>
                 </tbody>
               </table>
@@ -92,7 +92,7 @@ export default function TermsModal({ onClose }) {
               Al completar la <strong>1ª capa de 3 Maestros (indicados directos)</strong> en el Ciclo Bronze, el usuario recibe un <strong>reembolso (cashback) de $US 60.00</strong> que se acredita automáticamente en su billetera digital.
             </p>
             <p>
-              El <strong>Ciclo Bronze</strong> otorga un <strong>bono de $US 20.00 por cada indicado directo</strong> que se registre en la matriz. Los demás ciclos (Prata a Diamante) no generan bonificaciones adicionales por indicación directa; su valor está en el acceso a productos de mayor nivel.
+              El <strong>Ciclo Bronze</strong> otorga un <strong>bono de $US 20.00 por cada indicado directo</strong> que se registre en la matriz. Los demás ciclos (Plata a Diamante) no generan bonificaciones adicionales por indicación directa; su valor está en el acceso a productos de mayor nivel.
             </p>
           </section>
 

@@ -26,7 +26,7 @@ export default function App() {
   const [showSupabaseModal, setShowSupabaseModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
 
-  // Sync URL with state
+  // Sincronizar URL con estado
   useEffect(() => {
     const path = window.location.pathname;
     if (activeTab === 'vendas' && path !== '/vendas') {
@@ -36,7 +36,7 @@ export default function App() {
     }
   }, [activeTab]);
 
-  // Handle browser back/forward
+  // Manejar retroceso/avance del navegador
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname;
@@ -54,7 +54,7 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [token, activeTab]);
 
-  // Handle /terms direct access
+  // Manejar acceso directo a /terms
   useEffect(() => {
     if (window.location.pathname === '/terms') {
       setShowTermsModal(true);

@@ -9,7 +9,7 @@ export default function AdminDashboard({ token }) {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Form Retrátil de Cadastro Manual acima da tabela
+  // Formulario Retrátil de Registro Manual encima de la tabla
   const [showAddForm, setShowAddForm] = useState(false);
   const [addForm, setAddForm] = useState({
     name: '',
@@ -22,7 +22,7 @@ export default function AdminDashboard({ token }) {
   const [addError, setAddError] = useState('');
   const [addSuccess, setAddSuccess] = useState('');
 
-  // Modal de Redefinição de Senha e Notificação
+  // Modal de Redefinición de Contraseña y Notificación
   const [resetModalUser, setResetModalUser] = useState(null);
   const [newPasswordInput, setNewPasswordInput] = useState('');
   const [resetModalLoading, setResetModalLoading] = useState(false);
@@ -33,7 +33,7 @@ export default function AdminDashboard({ token }) {
   const [adminCycles, setAdminCycles] = useState([]);
   const [adminShipments, setAdminShipments] = useState([]);
 
-  // Estados da Gestão de Cursos LMS
+  // Estados de la Gestión de Cursos LMS
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [courseForm, setCourseForm] = useState({ id: null, title: '', description: '', thumbnail_url: '', is_published: true });
   const [courseModalLoading, setCourseModalLoading] = useState(false);
@@ -60,7 +60,7 @@ export default function AdminDashboard({ token }) {
         fetch('/api/admin/shipments', { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
-      if (!usersRes.ok) throw new Error('Falha ao carregar lista de usuários para administração.');
+      if (!usersRes.ok) throw new Error('Error al cargar la lista de usuarios para administración.');
 
       const data = await usersRes.json();
       const withdrawData = withdrawRes.ok ? await withdrawRes.json() : { withdrawals: [] };
@@ -96,7 +96,7 @@ export default function AdminDashboard({ token }) {
         setManageCourseDetails(data.course);
       }
     } catch (err) {
-      console.error('Erro ao carregar estrutura do curso:', err);
+      console.error('Error al cargar estructura del curso:', err);
     }
   };
 
@@ -122,7 +122,7 @@ export default function AdminDashboard({ token }) {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao salvar curso.');
+      if (!res.ok) throw new Error(data.error || 'Error al guardar curso.');
 
       setActionMessage(data.message);
       setShowCourseModal(false);
@@ -136,7 +136,7 @@ export default function AdminDashboard({ token }) {
   };
 
   const handleDeleteCourse = async (courseId) => {
-    if (!window.confirm('Tem certeza que deseja excluir este curso e todo o seu conteúdo?')) return;
+    if (!window.confirm('¿Está seguro de que desea eliminar este curso y todo su contenido?')) return;
     try {
       const res = await fetch(`/api/admin/courses/${courseId}`, {
         method: 'DELETE',
@@ -176,7 +176,7 @@ export default function AdminDashboard({ token }) {
   };
 
   const handleDeleteModule = async (moduleId) => {
-    if (!window.confirm('Excluir este módulo e todas as suas aulas?')) return;
+    if (!window.confirm('¿Eliminar este módulo y todas sus clases?')) return;
     try {
       const res = await fetch(`/api/admin/modules/${moduleId}`, {
         method: 'DELETE',
@@ -191,7 +191,7 @@ export default function AdminDashboard({ token }) {
   const handleSaveQuiz = async (e) => {
     e.preventDefault();
     if (!quizForm.module_id) {
-      alert('ERRO: Módulo não definido!');
+      alert('ERROR: ¡Módulo no definido!');
       return;
     }
     try {
@@ -218,15 +218,15 @@ export default function AdminDashboard({ token }) {
     e.preventDefault();
     console.log('DEBUG lessonForm:', lessonForm);
     if (!lessonForm.module_id) {
-      alert('ERRO: Módulo não definido!');
+      alert('ERROR: ¡Módulo no definido!');
       return;
     }
     if (!lessonForm.title) {
-        alert('ERRO: Título não definido!');
+        alert('ERROR: ¡Título no definido!');
         return;
     }
     if (!lessonForm.video_url) {
-        alert('ERRO: Link do vídeo não definido!');
+        alert('ERROR: ¡Enlace del video no definido!');
         return;
     }
     try {
@@ -250,7 +250,7 @@ export default function AdminDashboard({ token }) {
   };
 
   const handleDeleteLesson = async (lessonId) => {
-    if (!window.confirm('Excluir esta vídeo-aula?')) return;
+    if (!window.confirm('¿Eliminar esta video-clase?')) return;
     try {
       const res = await fetch(`/api/admin/lessons/${lessonId}`, {
         method: 'DELETE',
@@ -284,7 +284,7 @@ export default function AdminDashboard({ token }) {
   };
 
   const handleDeleteQuiz = async (quizId) => {
-    if (!window.confirm('Excluir este teste/exame permanentemente?')) return;
+    if (!window.confirm('¿Eliminar este examen/prueba permanentemente?')) return;
     try {
       const res = await fetch(`/api/admin/quizzes/${quizId}`, {
         method: 'DELETE',
@@ -314,12 +314,12 @@ export default function AdminDashboard({ token }) {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Erro ao realizar o cadastro manual.');
+        throw new Error(data.error || 'Error al realizar el registro manual.');
       }
 
       setAddSuccess(data.message);
       setAddForm({ name: '', email: '', password: '123456', sponsorIdentifier: users[0]?.referral_code || 'ADMIN100', targetLeg: 'auto' });
-      fetchUsers(); // Recarregar tabela da matriz
+      fetchUsers(); // Recargar tabla de la matriz
       setTimeout(() => {
         setAddSuccess('');
       }, 3000);
@@ -332,9 +332,9 @@ export default function AdminDashboard({ token }) {
 
   const handleToggleRole = async (userToToggle) => {
     const targetRole = userToToggle.role === 'admin' ? 'user' : 'admin';
-    const actionLabel = targetRole === 'admin' ? 'promover a Administrador' : 'alterar para Usuário comum';
+    const actionLabel = targetRole === 'admin' ? 'promover a Administrador' : 'cambiar a Usuario común';
 
-    if (!window.confirm(`Tem certeza que deseja ${actionLabel} o usuário "${userToToggle.name}"?`)) {
+    if (!window.confirm(`¿Está seguro de que desea ${actionLabel} al usuario "${userToToggle.name}"?`)) {
       return;
     }
 
@@ -349,21 +349,21 @@ export default function AdminDashboard({ token }) {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao alterar o perfil do usuário.');
+      if (!res.ok) throw new Error(data.error || 'Error al cambiar el perfil del usuario.');
 
       setActionMessage(data.message);
       fetchUsers();
       setTimeout(() => setActionMessage(''), 3500);
     } catch (err) {
-      alert(`Erro: ${err.message}`);
+      alert(`Error: ${err.message}`);
     }
   };
 
   const handleToggleActive = async (userToToggle) => {
     const newStatus = userToToggle.is_active === false;
-    const label = newStatus ? 'ATIVAR' : 'DESATIVAR';
+    const label = newStatus ? 'ACTIVAR' : 'DESACTIVAR';
 
-    if (!window.confirm(`Deseja realmente ${label} o usuário "${userToToggle.name}"?`)) {
+    if (!window.confirm(`¿Desea realmente ${label} al usuario "${userToToggle.name}"?`)) {
       return;
     }
 
@@ -378,20 +378,20 @@ export default function AdminDashboard({ token }) {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao alterar status de ativação.');
+      if (!res.ok) throw new Error(data.error || 'Error al cambiar el estado de activación.');
 
       setActionMessage(data.message);
       fetchUsers();
       setTimeout(() => setActionMessage(''), 3500);
     } catch (err) {
-      alert(`Erro: ${err.message}`);
+      alert(`Error: ${err.message}`);
     }
   };
 
   const handleProcessWithdrawal = async (withdrawalId, action) => {
-    const label = action === 'approve' ? 'APROVAR e pagar' : 'REJEITAR e devolver o saldo para';
+    const label = action === 'approve' ? 'APROBAR y pagar' : 'RECHAZAR y devolver el saldo a';
 
-    if (!window.confirm(`Tem certeza que deseja ${label} esta solicitação de saque PIX?`)) {
+    if (!window.confirm(`¿Está seguro de que desea ${label} esta solicitud de retiro PIX?`)) {
       return;
     }
 
@@ -406,18 +406,18 @@ export default function AdminDashboard({ token }) {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao processar saque.');
+      if (!res.ok) throw new Error(data.error || 'Error al procesar retiro.');
 
       setWithdrawActionMessage(data.message);
       fetchUsers();
       setTimeout(() => setWithdrawActionMessage(''), 3500);
     } catch (err) {
-      alert(`Erro: ${err.message}`);
+      alert(`Error: ${err.message}`);
     }
   };
 
   const handleUpdateShipmentStatus = async (shipmentId, status) => {
-    if (!window.confirm(`Alterar status do envio para "${status}"?`)) return;
+    if (!window.confirm(`¿Cambiar el estado del envío a "${status}"?`)) return;
     try {
       const res = await fetch(`/api/admin/shipments/${shipmentId}`, {
         method: 'PATCH',
@@ -452,7 +452,7 @@ export default function AdminDashboard({ token }) {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao redefinir senha.');
+      if (!res.ok) throw new Error(data.error || 'Error al redefinir contraseña.');
 
       setResetModalSuccess(data.message);
       setTimeout(() => {
@@ -481,7 +481,7 @@ export default function AdminDashboard({ token }) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
         <RefreshCw size={32} className="animate-spin" style={{ margin: '0 auto 1rem', display: 'block' }} />
-        Carregando visão global da Matriz Epi...
+        Cargando visión global de la Matriz Epi...
       </div>
     );
   }
@@ -492,15 +492,15 @@ export default function AdminDashboard({ token }) {
 
   return (
     <div>
-      {/* CABEÇALHO DO PAINEL ADMIN COM AÇÕES DE EXPORTAÇÃO E ADICIONAR MEMBRO */}
+      {/* ENCABEZADO DEL PANEL ADMIN CON ACCIONES DE EXPORTACIÓN Y AGREGAR MIEMBRO */}
       <div className="card-header" style={{ marginBottom: '1.5rem' }}>
         <div>
           <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Shield size={26} style={{ color: 'var(--primary)' }} />
-            Administração da Matriz Epi 3x3
+            Administración de la Matriz Epi 3x3
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-            Acompanhamento de posições, carteira de saques PIX, ativação mensal e gestão de Cursos LMS
+            Seguimiento de posiciones, cartera de retiros PIX, activación mensal y gestión de Cursos LMS
           </p>
         </div>
 
@@ -512,7 +512,7 @@ export default function AdminDashboard({ token }) {
             onClick={() => setShowAddForm(!showAddForm)}
           >
             <UserPlus size={18} /> 
-            {showAddForm ? 'Ocultar Formulário' : 'Adicionar Novo Membro'}
+            {showAddForm ? 'Ocultar Formulario' : 'Agregar Nuevo Miembro'}
             {showAddForm ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
           <button type="button" className="btn-export" style={{ cursor: 'pointer' }} onClick={handleExportCSV}>
@@ -535,7 +535,7 @@ export default function AdminDashboard({ token }) {
         </div>
       )}
 
-      {/* MÉTRICAS GLOBAIS */}
+      {/* MÉTRICAS GLOBALES */}
       <div className="stats-grid">
         <div className="stat-card stat-card-indigo">
           <div className="stat-header">
@@ -543,7 +543,7 @@ export default function AdminDashboard({ token }) {
             <div className="stat-icon stat-icon-indigo"><Users size={20} /></div>
           </div>
           <div className="stat-value">{totalUsersCount}</div>
-          <div className="stat-subtext">Cadastros ativos na plataforma Epi</div>
+          <div className="stat-subtext">Registros activos en la plataforma Epi</div>
         </div>
 
         <div className="stat-card stat-card-emerald">
@@ -552,25 +552,25 @@ export default function AdminDashboard({ token }) {
             <div className="stat-icon stat-icon-emerald"><DollarSign size={20} /></div>
           </div>
           <div className="stat-value">{totalRefundedCount}</div>
-          <div className="stat-subtext">Membros com 3 Maestros completos</div>
+          <div className="stat-subtext">Miembros con 3 Maestros completos</div>
         </div>
 
         <div className="stat-card stat-card-purple" style={{ borderLeftColor: '#fbbf24' }}>
           <div className="stat-header">
-            <span className="stat-title">Saques PIX Pendentes</span>
+            <span className="stat-title">Retiros PIX Pendientes</span>
             <div className="stat-icon" style={{ background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24' }}><Wallet size={20} /></div>
           </div>
           <div className="stat-value" style={{ color: '#fbbf24' }}>{pendingWithdrawalsCount}</div>
-          <div className="stat-subtext">Solicitações aguardando transferência</div>
+          <div className="stat-subtext">Solicitudes esperando transferencia</div>
         </div>
       </div>
 
-      {/* SEÇÃO DE GESTÃO DO MÓDULO DE CURSOS E AULAS (LMS) */}
+      {/* SECCIÓN DE GESTIÓN DEL MÓDULO DE CURSOS Y CLASES (LMS) */}
       <div className="glass-card" style={{ marginBottom: '1.5rem', border: '1px solid var(--primary-glow)' }}>
         <div className="card-header">
           <div className="card-title">
             <BookOpen size={22} style={{ color: 'var(--accent-cyan)' }} />
-            <span>Gestão do Módulo de Cursos & Área de Membros (LMS)</span>
+            <span>Gestión del Módulo de Cursos & Área de Miembros (LMS)</span>
           </div>
 
           <button
@@ -582,13 +582,13 @@ export default function AdminDashboard({ token }) {
               setShowCourseModal(true);
             }}
           >
-            <Plus size={18} /> Criar Novo Curso
+            <Plus size={18} /> Crear Nuevo Curso
           </button>
         </div>
 
         {adminCourses.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-            Nenhum curso cadastrado no sistema. Clique em "+ Criar Novo Curso" para começar.
+            Ningún curso registrado en el sistema. Haga clic en "+ Crear Nuevo Curso" para comenzar.
           </div>
         ) : (
           <div className="table-responsive">
@@ -596,11 +596,11 @@ export default function AdminDashboard({ token }) {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Título do Curso</th>
+                  <th>Título del Curso</th>
                   <th>Módulos</th>
-                  <th>Aulas</th>
-                  <th>Visibilidade</th>
-                  <th style={{ textAlign: 'center' }}>Ações de Gestão</th>
+                  <th>Clases</th>
+                  <th>Visibilidad</th>
+                  <th style={{ textAlign: 'center' }}>Acciones de Gestión</th>
                 </tr>
               </thead>
               <tbody>
@@ -609,13 +609,13 @@ export default function AdminDashboard({ token }) {
                     <td style={{ color: 'var(--text-subtle)' }}>#{c.id}</td>
                     <td style={{ fontWeight: 700 }}>{c.title}</td>
                     <td><span className="level-badge level-1">{c.modules_count || 0} módulos</span></td>
-                    <td><span className="level-badge level-2">{c.lessons_count || 0} aulas</span></td>
+                    <td><span className="level-badge level-2">{c.lessons_count || 0} clases</span></td>
                     <td>
                       {c.is_published !== false ? (
                         <span className="origin-badge origin-direct">👁️ Publicado</span>
                       ) : (
                         <span className="origin-badge origin-spillover" style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.4)' }}>
-                          🔒 Rascunho
+                          🔒 Borrador
                         </span>
                       )}
                     </td>
@@ -626,9 +626,9 @@ export default function AdminDashboard({ token }) {
                           className="demo-pill"
                           style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.3)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}
                           onClick={() => fetchCourseStructure(c.id)}
-                          title="Gerenciar Módulos e Vídeo-Aulas"
+                          title="Gestionar Módulos y Video-Clases"
                         >
-                          <Video size={12} /> Aulas
+                          <Video size={12} /> Clases
                         </button>
                         <button
                           type="button"
@@ -647,9 +647,9 @@ export default function AdminDashboard({ token }) {
                           className="demo-pill"
                           style={{ background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.3)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}
                           onClick={() => handleDeleteCourse(c.id)}
-                          title="Excluir Curso"
+                          title="Eliminar Curso"
                         >
-                          <Trash2 size={12} /> Excluir
+                          <Trash2 size={12} /> Eliminar
                         </button>
                       </div>
                     </td>
@@ -660,13 +660,13 @@ export default function AdminDashboard({ token }) {
           </div>
         )}
 
-        {/* INSPETOR DE MÓDULOS E AULAS DO CURSO SELECIONADO PELO ADMIN */}
+        {/* INSPECTOR DE MÓDULOS Y CLASES DEL CURSO SELECCIONADO POR EL ADMIN */}
         {manageCourseDetails && (
           <div style={{ marginTop: '1.5rem', background: '#0f172a', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--accent-cyan)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
               <h3 style={{ color: '#fff', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Video size={20} style={{ color: 'var(--accent-cyan)' }} />
-                Gerenciando Conteúdo: "{manageCourseDetails.title}"
+                Gestionando Contenido: "{manageCourseDetails.title}"
               </h3>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
@@ -678,17 +678,17 @@ export default function AdminDashboard({ token }) {
                     setShowModuleModal(true);
                   }}
                 >
-                  <Plus size={14} /> Adicionar Módulo
+                  <Plus size={14} /> Agregar Módulo
                 </button>
                 <button type="button" className="nav-btn nav-btn-ghost" onClick={() => setManageCourseDetails(null)}>
-                  Fechar ×
+                  Cerrar ×
                 </button>
               </div>
             </div>
 
             {(!manageCourseDetails.modules || manageCourseDetails.modules.length === 0) ? (
               <div style={{ color: 'var(--text-muted)', fontSize: '0.88rem', textAlign: 'center', padding: '1.5rem 0' }}>
-                Nenhum módulo cadastrado. Clique em "+ Adicionar Módulo" acima.
+                Ningún módulo registrado. Haga clic en "+ Agregar Módulo" arriba.
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -708,7 +708,7 @@ export default function AdminDashboard({ token }) {
                             setShowLessonModal(true);
                           }}
                         >
-                          + Adicionar Aula
+                          + Agregar Clase
                         </button>
                         <button
                           type="button"
@@ -719,7 +719,7 @@ export default function AdminDashboard({ token }) {
                             setShowQuizModal(true);
                           }}
                         >
-                          + Adicionar Quiz
+                          + Agregar Quiz
                         </button>
                         <button
                           type="button"
@@ -727,15 +727,15 @@ export default function AdminDashboard({ token }) {
                           style={{ background: 'rgba(244, 63, 94, 0.2)', color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.4)', cursor: 'pointer' }}
                           onClick={() => handleDeleteModule(m.id)}
                         >
-                          Excluir Módulo
+                          Eliminar Módulo
                         </button>
                       </div>
                     </div>
 
-                    {/* AULAS E QUIZZES DO MÓDULO */}
+                    {/* CLASES Y QUIZZES DEL MÓDULO */}
                     {(!m.lessons || m.lessons.length === 0) && (!m.quizzes || m.quizzes.length === 0) ? (
                       <div style={{ color: 'var(--text-subtle)', fontSize: '0.8rem', fontStyle: 'italic', paddingLeft: '0.5rem' }}>
-                        Nenhum conteúdo cadastrado neste módulo.
+                        Ningún contenido registrado en este módulo.
                       </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
@@ -794,18 +794,18 @@ export default function AdminDashboard({ token }) {
         )}
       </div>
 
-      {/* SEÇÃO DE GESTÃO DE SAQUES PIX PENDENTES E HISTÓRICO */}
+      {/* SECCIÓN DE GESTIÓN DE RETIROS PIX PENDIENTES E HISTÓRICO */}
       <div className="glass-card" style={{ marginBottom: '1.5rem', border: '1px solid var(--primary-glow)' }}>
         <div className="card-header">
           <div className="card-title">
             <Wallet size={22} style={{ color: '#fbbf24' }} />
-            <span>Gerenciamento de Saques PIX Solicitados ({withdrawals.length})</span>
+            <span>Gestión de Retiros PIX Solicitados ({withdrawals.length})</span>
           </div>
         </div>
 
         {withdrawals.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-            Nenhuma solicitação de saque PIX registrada até o momento.
+            Ninguna solicitud de retiro PIX registrada hasta el momento.
           </div>
         ) : (
           <div className="table-responsive">
@@ -814,12 +814,12 @@ export default function AdminDashboard({ token }) {
                 <tr>
                   <th>ID</th>
                   <th>Afiliado</th>
-                  <th>E-mail</th>
-                  <th>Valor ($US)</th>
-                  <th>Chave PIX</th>
-                  <th>Data</th>
-                  <th>Status</th>
-                  <th style={{ textAlign: 'center' }}>Ação Admin</th>
+                  <th>Correo</th>
+                  <th>Monto ($US)</th>
+                  <th>Clave PIX</th>
+                  <th>Fecha</th>
+                  <th>Estado</th>
+                  <th style={{ textAlign: 'center' }}>Acción Admin</th>
                 </tr>
               </thead>
               <tbody>
@@ -831,18 +831,18 @@ export default function AdminDashboard({ token }) {
                     <td style={{ fontWeight: 800, color: '#38bdf8' }}>$US {parseFloat(w.amount).toFixed(2)}</td>
                     <td style={{ color: '#67e8f9', fontFamily: 'monospace', fontWeight: 600 }}>{w.pix_key}</td>
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                      {new Date(w.created_at).toLocaleDateString('pt-BR')} {new Date(w.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(w.created_at).toLocaleDateString('es-ES')} {new Date(w.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                     </td>
                     <td>
                       {w.status === 'approved' ? (
-                        <span className="origin-badge origin-direct">✅ Pago (Aprovado)</span>
+                        <span className="origin-badge origin-direct">✅ Pagado (Aprobado)</span>
                       ) : w.status === 'rejected' ? (
                         <span className="origin-badge origin-spillover" style={{ color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.4)' }}>
-                          ❌ Rejeitado (Estornado)
+                          ❌ Rechazado (Reembolsado)
                         </span>
                       ) : (
                         <span className="origin-badge origin-spillover" style={{ color: '#fbbf24', borderColor: 'rgba(251, 191, 36, 0.4)' }}>
-                          ⏳ Pendente de Análise
+                          ⏳ Pendiente de Análisis
                         </span>
                       )}
                     </td>
@@ -854,22 +854,22 @@ export default function AdminDashboard({ token }) {
                             className="demo-pill"
                             style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', borderColor: 'rgba(16, 185, 129, 0.4)', cursor: 'pointer' }}
                             onClick={() => handleProcessWithdrawal(w.id, 'approve')}
-                            title="Aprovar Saque e Confirmar Pagamento"
+                            title="Aprobar Retiro y Confirmar Pago"
                           >
-                            ✅ Aprovar
+                            ✅ Aprobar
                           </button>
                           <button
                             type="button"
                             className="demo-pill"
                             style={{ background: 'rgba(244, 63, 94, 0.2)', color: '#f43f5e', borderColor: 'rgba(244, 63, 94, 0.4)', cursor: 'pointer' }}
                             onClick={() => handleProcessWithdrawal(w.id, 'reject')}
-                            title="Rejeitar Saque e Estornar Saldo"
+                            title="Rechazar Retiro y Reembolsar Saldo"
                           >
-                            ❌ Rejeitar
+                            ❌ Rechazar
                           </button>
                         </div>
                       ) : (
-                        <span style={{ color: 'var(--text-subtle)', fontSize: '0.8rem' }}>— Processado</span>
+                        <span style={{ color: 'var(--text-subtle)', fontSize: '0.8rem' }}>— Procesado</span>
                       )}
                     </td>
                   </tr>
@@ -880,29 +880,29 @@ export default function AdminDashboard({ token }) {
         )}
       </div>
 
-      {/* SEÇÃO DE GESTÃO DE CICLOS */}
+      {/* SECCIÓN DE GESTIÓN DE CICLOS */}
       <div className="glass-card" style={{ marginBottom: '1.5rem', border: '1px solid var(--primary-glow)' }}>
         <div className="card-header">
           <div className="card-title">
             <Layers size={22} style={{ color: '#a855f7' }} />
-            <span>Gestão de Ciclos ({adminCycles.length})</span>
+            <span>Gestión de Ciclos ({adminCycles.length})</span>
           </div>
         </div>
         {adminCycles.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Nenhum ciclo cadastrado.</div>
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Ningún ciclo registrado.</div>
         ) : (
           <div className="table-responsive">
             <table className="custom-table">
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Nome</th>
+                  <th>Nombre</th>
                   <th>Slug</th>
-                  <th>Preço ($US)</th>
-                  <th>Bônus/Indicação</th>
+                  <th>Precio ($US)</th>
+                  <th>Bono/Indicación</th>
                   <th>Reembolso</th>
-                  <th>Ordem</th>
-                  <th>Ativo</th>
+                  <th>Orden</th>
+                  <th>Activo</th>
                 </tr>
               </thead>
               <tbody>
@@ -917,9 +917,9 @@ export default function AdminDashboard({ token }) {
                     <td style={{ color: 'var(--text-muted)' }}>{c.order_index}</td>
                     <td>
                       {c.is_active ? (
-                        <span className="origin-badge origin-direct">✅ Ativo</span>
+                        <span className="origin-badge origin-direct">✅ Activo</span>
                       ) : (
-                        <span className="origin-badge origin-spillover" style={{ color: '#f43f5e', borderColor: 'rgba(244,63,94,0.4)' }}>🔒 Inativo</span>
+                        <span className="origin-badge origin-spillover" style={{ color: '#f43f5e', borderColor: 'rgba(244,63,94,0.4)' }}>🔒 Inactivo</span>
                       )}
                     </td>
                   </tr>
@@ -930,29 +930,29 @@ export default function AdminDashboard({ token }) {
         )}
       </div>
 
-      {/* SEÇÃO DE GESTÃO DE ENVIOS DE PRODUTOS */}
+      {/* SECCIÓN DE GESTIÓN DE ENVIOS DE PRODUCTOS */}
       <div className="glass-card" style={{ marginBottom: '1.5rem', border: '1px solid var(--primary-glow)' }}>
         <div className="card-header">
           <div className="card-title">
             <Send size={22} style={{ color: '#38bdf8' }} />
-            <span>Envios de Produtos Físicos ({adminShipments.length})</span>
+            <span>Envíos de Productos Físicos ({adminShipments.length})</span>
           </div>
         </div>
         {adminShipments.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Nenhum envio registrado. Envios são criados automaticamente ao atingir ciclo Ouro+.</div>
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Ningún envío registrado. Los envíos se crean automáticamente al alcanzar el ciclo Ouro+.</div>
         ) : (
           <div className="table-responsive">
             <table className="custom-table">
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Usuário</th>
-                  <th>Produto</th>
+                  <th>Usuario</th>
+                  <th>Producto</th>
                   <th>Ciclo</th>
-                  <th>Endereço</th>
-                  <th>Status</th>
-                  <th>Data</th>
-                  <th style={{ textAlign: 'center' }}>Ação</th>
+                  <th>Dirección</th>
+                  <th>Estado</th>
+                  <th>Fecha</th>
+                  <th style={{ textAlign: 'center' }}>Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -967,16 +967,16 @@ export default function AdminDashboard({ token }) {
                     </td>
                     <td>
                       {s.status === 'delivered' ? (
-                        <span className="origin-badge origin-direct">✅ Entregue</span>
+                        <span className="origin-badge origin-direct">✅ Entregado</span>
                       ) : s.status === 'shipped' ? (
                         <span className="origin-badge" style={{ color: '#38bdf8', borderColor: 'rgba(56,189,248,0.4)' }}>📦 Enviado</span>
                       ) : s.status === 'cancelled' ? (
                         <span className="origin-badge origin-spillover" style={{ color: '#f43f5e', borderColor: 'rgba(244,63,94,0.4)' }}>❌ Cancelado</span>
                       ) : (
-                        <span className="origin-badge origin-spillover" style={{ color: '#fbbf24', borderColor: 'rgba(251,191,36,0.4)' }}>⏳ Pendente</span>
+                        <span className="origin-badge origin-spillover" style={{ color: '#fbbf24', borderColor: 'rgba(251,191,36,0.4)' }}>⏳ Pendiente</span>
                       )}
                     </td>
-                    <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
+                    <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{new Date(s.created_at).toLocaleDateString('es-ES')}</td>
                     <td style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
                       {s.status === 'pending' && (
                         <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'center' }}>
@@ -985,7 +985,7 @@ export default function AdminDashboard({ token }) {
                         </div>
                       )}
                       {s.status === 'shipped' && (
-                        <button type="button" className="demo-pill" style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', borderColor: 'rgba(16,185,129,0.3)', cursor: 'pointer' }} onClick={() => handleUpdateShipmentStatus(s.id, 'delivered')}>✅ Entregue</button>
+                        <button type="button" className="demo-pill" style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', borderColor: 'rgba(16,185,129,0.3)', cursor: 'pointer' }} onClick={() => handleUpdateShipmentStatus(s.id, 'delivered')}>✅ Entregado</button>
                       )}
                       {(s.status === 'delivered' || s.status === 'cancelled') && (
                         <span style={{ color: 'var(--text-subtle)', fontSize: '0.8rem' }}>—</span>
@@ -999,16 +999,16 @@ export default function AdminDashboard({ token }) {
         )}
       </div>
 
-      {/* PAINEL RETRÁTIL DE CADASTRO MANUAL ACIMA DA TABELA */}
+      {/* PANEL RETRÁTIL DE REGISTRO MANUAL ENCIMA DE LA TABLA */}
       {showAddForm && (
         <div className="glass-card" style={{ marginBottom: '1.5rem', border: '1px solid var(--primary-glow)', background: 'linear-gradient(135deg, rgba(26, 37, 60, 0.95), rgba(15, 23, 42, 0.95))' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
             <h3 style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '1.15rem' }}>
               <UserPlus size={22} style={{ color: 'var(--accent-cyan)' }} />
-              Cadastrar Novo Membro na Matriz Epi (Escolha de Perna)
+              Registrar Nuevo Miembro en la Matriz Epi (Elección de Pierna)
             </h3>
             <button type="button" className="nav-btn nav-btn-ghost" onClick={() => setShowAddForm(false)}>
-              Fechar ×
+              Cerrar ×
             </button>
           </div>
 
@@ -1029,11 +1029,11 @@ export default function AdminDashboard({ token }) {
           <form onSubmit={handleAddUserSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Nome Completo</label>
+                <label className="form-label">Nombre Completo</label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Ex: Mariana Castro"
+                  placeholder="Ej: Mariana Castro"
                   style={{ paddingLeft: '1rem' }}
                   value={addForm.name}
                   onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
@@ -1042,11 +1042,11 @@ export default function AdminDashboard({ token }) {
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Endereço de E-mail</label>
+                <label className="form-label">Dirección de Correo</label>
                 <input
                   type="email"
                   className="form-input"
-                  placeholder="mariana@exemplo.com"
+                  placeholder="mariana@ejemplo.com"
                   style={{ paddingLeft: '1rem' }}
                   value={addForm.email}
                   onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
@@ -1055,7 +1055,7 @@ export default function AdminDashboard({ token }) {
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Senha Temporária</label>
+                <label className="form-label">Contraseña Temporal</label>
                 <input
                   type="text"
                   className="form-input"
@@ -1067,7 +1067,7 @@ export default function AdminDashboard({ token }) {
                 />
               </div>
 
-              {/* SELETOR DE PATROCINADOR (SPONSOR) */}
+              {/* SELECCIONADOR DE PATROCINADOR (SPONSOR) */}
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" style={{ color: '#67e8f9', fontWeight: 700 }}>
                   Patrocinador (Sponsor)
@@ -1087,10 +1087,10 @@ export default function AdminDashboard({ token }) {
                 </select>
               </div>
 
-              {/* SELETOR DA PERNA / POSIÇÃO DA ÁRVORE */}
+              {/* SELECCIONADOR DE PIERNA / POSICIÓN DEL ÁRBOL */}
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" style={{ color: '#34d399', fontWeight: 700 }}>
-                  Posição / Perna da Matriz
+                  Posición / Pierna de la Matriz
                 </label>
                 <select
                   className="form-input"
@@ -1099,16 +1099,16 @@ export default function AdminDashboard({ token }) {
                   onChange={(e) => setAddForm({ ...addForm, targetLeg: e.target.value })}
                   required
                 >
-                  <option value="auto">🤖 Automático (Derrame Sequencial)</option>
-                  <option value="left">👈 Posição 1 — Perna Esquerda</option>
-                  <option value="center">🎯 Posição 2 — Perna Central</option>
-                  <option value="right">👉 Posição 3 — Perna Direita</option>
+                  <option value="auto">🤖 Automático (Derrame Secuencial)</option>
+                  <option value="left">👈 Posición 1 — Pierna Izquierda</option>
+                  <option value="center">🎯 Posición 2 — Pierna Central</option>
+                  <option value="right">👉 Posición 3 — Pierna Derecha</option>
                 </select>
               </div>
             </div>
 
             <div style={{ fontSize: '0.8rem', color: 'var(--text-subtle)', marginTop: '0.85rem' }}>
-              * Ao selecionar uma perna específica (Esquerda, Centro ou Direita), o membro é alocado diretamente naquela posição. Se a posição direta do líder já estiver ocupada, o sistema alocará na sub-árvore daquela perna escolhida.
+              * Al seleccionar una pierna específica (Izquierda, Centro o Derecha), el miembro se asigna directamente en esa posición. Si la posición directa del líder ya está ocupada, el sistema asignará en el sub-árbol de esa pierna elegida.
             </div>
 
             <div style={{ marginTop: '1.25rem', display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
@@ -1116,14 +1116,14 @@ export default function AdminDashboard({ token }) {
                 Cancelar
               </button>
               <button type="submit" className="nav-btn nav-btn-primary" disabled={addLoading}>
-                {addLoading ? 'Cadastrando na Matriz...' : 'Confirmar e Inserir Membro'}
+                {addLoading ? 'Registrando en la Matriz...' : 'Confirmar e Insertar Miembro'}
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* TABELA ADMIN */}
+      {/* TABLA ADMIN */}
       <div className="glass-card">
         <div className="card-header">
           <div className="card-title">
@@ -1135,7 +1135,7 @@ export default function AdminDashboard({ token }) {
             <Search size={16} style={{ color: 'var(--text-subtle)' }} />
             <input
               type="text"
-              placeholder="Buscar por nome, e-mail ou código..."
+              placeholder="Buscar por nombre, correo o código..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -1147,17 +1147,17 @@ export default function AdminDashboard({ token }) {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Nome</th>
-                <th>E-mail</th>
+                <th>Nombre</th>
+                <th>Correo</th>
                 <th>Perfil</th>
-                <th>Status Conta</th>
+                <th>Estado Cuenta</th>
                 <th>Patrocinador</th>
-                <th>Alocado em</th>
-                <th>Perna</th>
+                <th>Asignado en</th>
+                <th>Pierna</th>
                 <th>Reembolso $US 60</th>
                 <th>Maestros</th>
                 <th>Total 39</th>
-                <th style={{ textAlign: 'center' }}>Ações de Gestão</th>
+                <th style={{ textAlign: 'center' }}>Acciones de Gestión</th>
               </tr>
             </thead>
             <tbody>
@@ -1181,7 +1181,7 @@ export default function AdminDashboard({ token }) {
                         padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600,
                         background: 'rgba(148, 163, 184, 0.1)', color: '#94a3b8', border: '1px solid rgba(148, 163, 184, 0.2)'
                       }}>
-                        Usuário
+                        Usuario
                       </span>
                     )}
                   </td>
@@ -1192,7 +1192,7 @@ export default function AdminDashboard({ token }) {
                         padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700,
                         background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.4)'
                       }}>
-                        Ativo
+                        Activo
                       </span>
                     ) : (
                       <span style={{
@@ -1200,12 +1200,12 @@ export default function AdminDashboard({ token }) {
                         padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700,
                         background: 'rgba(244, 63, 94, 0.2)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.4)'
                       }}>
-                        Inativo
+                        Inactivo
                       </span>
                     )}
                   </td>
-                  <td>{u.sponsor_name || 'Nenhum'}</td>
-                  <td>{u.placement_name || 'Nenhum'}</td>
+                  <td>{u.sponsor_name || 'Ninguno'}</td>
+                  <td>{u.placement_name || 'Ninguno'}</td>
                   <td>
                     {u.position ? (
                       <span style={{
@@ -1217,14 +1217,14 @@ export default function AdminDashboard({ token }) {
                       }}>
                         {u.position === 1 ? '👈 P.1' : u.position === 2 ? '🎯 P.2' : '👉 P.3'}
                       </span>
-                    ) : <span style={{ color: 'var(--text-subtle)' }}>— Raiz</span>}
+                    ) : <span style={{ color: 'var(--text-subtle)' }}>— Raíz</span>}
                   </td>
                   <td>
                     {u.fee_refunded ? (
                       <span className="origin-badge origin-direct">✅ $US 60</span>
                     ) : (
                       <span className="origin-badge origin-spillover" style={{ color: '#fbbf24', borderColor: 'rgba(251,191,36,0.3)' }}>
-                        ⏳ Pendente
+                        ⏳ Pendiente
                       </span>
                     )}
                   </td>
@@ -1245,9 +1245,9 @@ export default function AdminDashboard({ token }) {
                           display: 'inline-flex', alignItems: 'center', gap: '0.2rem'
                         }}
                         onClick={() => handleToggleActive(u)}
-                        title={u.is_active !== false ? 'Desativar Afiliado' : 'Ativar Afiliado'}
+                        title={u.is_active !== false ? 'Desactivar Afiliado' : 'Activar Afiliado'}
                       >
-                        <Power size={11} /> {u.is_active !== false ? 'Desativar' : 'Ativar'}
+                        <Power size={11} /> {u.is_active !== false ? 'Desactivar' : 'Activar'}
                       </button>
 
                       <button
@@ -1260,7 +1260,7 @@ export default function AdminDashboard({ token }) {
                           cursor: 'pointer'
                         }}
                         onClick={() => handleToggleRole(u)}
-                        title={u.role === 'admin' ? 'Rebaixar para Usuário' : 'Promover a Administrador'}
+                        title={u.role === 'admin' ? 'Degradar a Usuario' : 'Promover a Administrador'}
                       >
                         {u.role === 'admin' ? 'User' : 'Admin'}
                       </button>
@@ -1283,9 +1283,9 @@ export default function AdminDashboard({ token }) {
                           setResetModalError('');
                           setResetModalSuccess('');
                         }}
-                        title="Redefinir Senha do Afiliado"
+                        title="Redefinir Contraseña del Afiliado"
                       >
-                        <Key size={11} /> Senha
+                        <Key size={11} /> Contraseña
                       </button>
                     </div>
                   </td>
@@ -1296,7 +1296,7 @@ export default function AdminDashboard({ token }) {
         </div>
       </div>
 
-      {/* MODAL DE CRIAR / EDITAR CURSO */}
+      {/* MODAL DE CREAR / EDITAR CURSO */}
       {showCourseModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -1307,7 +1307,7 @@ export default function AdminDashboard({ token }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
               <h3 style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.15rem' }}>
                 <BookOpen size={20} style={{ color: 'var(--accent-cyan)' }} />
-                {courseForm.id ? 'Editar Curso' : 'Criar Novo Curso'}
+                {courseForm.id ? 'Editar Curso' : 'Crear Nuevo Curso'}
               </h3>
               <button type="button" className="nav-btn nav-btn-ghost" onClick={() => setShowCourseModal(false)}>
                 <X size={18} />
@@ -1316,12 +1316,12 @@ export default function AdminDashboard({ token }) {
 
             <form onSubmit={handleSaveCourse}>
               <div className="form-group">
-                <label className="form-label">Título do Curso</label>
+                <label className="form-label">Título del Curso</label>
                 <input
                   type="text"
                   className="form-input"
                   style={{ paddingLeft: '1rem' }}
-                  placeholder="Ex: Formação MMN & Liderança 3x3"
+                  placeholder="Ej: Formación MLM & Liderazgo 3x3"
                   value={courseForm.title}
                   onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })}
                   required
@@ -1329,18 +1329,18 @@ export default function AdminDashboard({ token }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Descrição</label>
+                <label className="form-label">Descripción</label>
                 <textarea
                   className="form-input"
                   style={{ paddingLeft: '1rem', minHeight: '80px', fontFamily: 'inherit' }}
-                  placeholder="Apresentação do curso..."
+                  placeholder="Presentación del curso..."
                   value={courseForm.description}
                   onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })}
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">URL da Capa (Thumbnail)</label>
+                <label className="form-label">URL de la Portada (Thumbnail)</label>
                 <input
                   type="url"
                   className="form-input"
@@ -1358,7 +1358,7 @@ export default function AdminDashboard({ token }) {
                     checked={courseForm.is_published}
                     onChange={(e) => setCourseForm({ ...courseForm, is_published: e.target.checked })}
                   />
-                  <span>Publicar no catálogo dos afiliados</span>
+                  <span>Publicar en el catálogo de afiliados</span>
                 </label>
               </div>
 
@@ -1367,7 +1367,7 @@ export default function AdminDashboard({ token }) {
                   Cancelar
                 </button>
                 <button type="submit" className="nav-btn nav-btn-primary" disabled={courseModalLoading}>
-                  {courseModalLoading ? 'Salvação...' : 'Salvar Curso'}
+                  {courseModalLoading ? 'Guardando...' : 'Guardar Curso'}
                 </button>
               </div>
             </form>
@@ -1375,7 +1375,7 @@ export default function AdminDashboard({ token }) {
         </div>
       )}
 
-      {/* MODAL DE ADICIONAR MÓDULO */}
+      {/* MODAL DE AGREGAR MÓDULO */}
       {showModuleModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -1384,7 +1384,7 @@ export default function AdminDashboard({ token }) {
         }}>
           <div className="glass-card" style={{ maxWidth: '420px', width: '100%', border: '1px solid var(--primary-glow)', background: '#0f172a' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
-              <h3 style={{ color: '#fff', fontSize: '1.1rem' }}>Novo Módulo</h3>
+              <h3 style={{ color: '#fff', fontSize: '1.1rem' }}>Nuevo Módulo</h3>
               <button type="button" className="nav-btn nav-btn-ghost" onClick={() => setShowModuleModal(false)}>
                 <X size={18} />
               </button>
@@ -1392,12 +1392,12 @@ export default function AdminDashboard({ token }) {
 
             <form onSubmit={handleSaveModule}>
               <div className="form-group">
-                <label className="form-label">Título do Módulo</label>
+                <label className="form-label">Título del Módulo</label>
                 <input
                   type="text"
                   className="form-input"
                   style={{ paddingLeft: '1rem' }}
-                  placeholder="Ex: Módulo 1: Fundamentos"
+                  placeholder="Ej: Módulo 1: Fundamentos"
                   value={moduleForm.title}
                   onChange={(e) => setModuleForm({ ...moduleForm, title: e.target.value })}
                   required
@@ -1405,7 +1405,7 @@ export default function AdminDashboard({ token }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Ordem de Exibição</label>
+                <label className="form-label">Orden de Visualización</label>
                 <input
                   type="number"
                   className="form-input"
@@ -1421,7 +1421,7 @@ export default function AdminDashboard({ token }) {
                   Cancelar
                 </button>
                 <button type="submit" className="nav-btn nav-btn-primary">
-                  Adicionar Módulo
+                  Agregar Módulo
                 </button>
               </div>
             </form>
@@ -1429,7 +1429,7 @@ export default function AdminDashboard({ token }) {
         </div>
       )}
 
-      {/* MODAL DE ADICIONAR PERGUNTA */}
+      {/* MODAL DE AGREGAR PREGUNTA */}
       {showQuestionModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -1438,7 +1438,7 @@ export default function AdminDashboard({ token }) {
         }}>
           <div className="glass-card" style={{ maxWidth: '500px', width: '100%', border: '1px solid var(--primary-glow)', background: '#0f172a' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
-              <h3 style={{ color: '#fff', fontSize: '1.1rem' }}>Adicionar Pergunta</h3>
+              <h3 style={{ color: '#fff', fontSize: '1.1rem' }}>Agregar Pregunta</h3>
               <button type="button" className="nav-btn nav-btn-ghost" onClick={() => setShowQuestionModal(false)}>
                 <X size={18} />
               </button>
@@ -1446,7 +1446,7 @@ export default function AdminDashboard({ token }) {
 
             <form onSubmit={handleSaveQuestion}>
               <div className="form-group">
-                <label className="form-label">Pergunta</label>
+                <label className="form-label">Pregunta</label>
                 <input
                   type="text"
                   className="form-input"
@@ -1466,7 +1466,7 @@ export default function AdminDashboard({ token }) {
                       checked={questionForm.correct_option_index === idx}
                       onChange={() => setQuestionForm({ ...questionForm, correct_option_index: idx })}
                     />
-                    Opção {idx + 1}
+                    Opción {idx + 1}
                   </label>
                   <input
                     type="text"
@@ -1487,7 +1487,7 @@ export default function AdminDashboard({ token }) {
                   Cancelar
                 </button>
                 <button type="submit" className="nav-btn nav-btn-primary">
-                  Salvar Pergunta
+                  Guardar Pregunta
                 </button>
               </div>
             </form>
@@ -1503,7 +1503,7 @@ export default function AdminDashboard({ token }) {
         }}>
           <div className="glass-card" style={{ maxWidth: '420px', width: '100%', border: '1px solid var(--primary-glow)', background: '#0f172a' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
-              <h3 style={{ color: '#fff', fontSize: '1.1rem' }}>Novo Quiz</h3>
+              <h3 style={{ color: '#fff', fontSize: '1.1rem' }}>Nuevo Quiz</h3>
               <button type="button" className="nav-btn nav-btn-ghost" onClick={() => setShowQuizModal(false)}>
                 <X size={18} />
               </button>
@@ -1511,12 +1511,12 @@ export default function AdminDashboard({ token }) {
 
             <form onSubmit={handleSaveQuiz}>
               <div className="form-group">
-                <label className="form-label">Título do Quiz</label>
+                <label className="form-label">Título del Quiz</label>
                 <input
                   type="text"
                   className="form-input"
                   style={{ paddingLeft: '1rem' }}
-                  placeholder="Ex: Quiz Módulo 1"
+                  placeholder="Ej: Quiz Módulo 1"
                   value={quizForm.title}
                   onChange={(e) => setQuizForm({ ...quizForm, title: e.target.value })}
                   required
@@ -1524,7 +1524,7 @@ export default function AdminDashboard({ token }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Pontuação Mínima para Aprovação (%)</label>
+                <label className="form-label">Puntuación Mínima para Aprobación (%)</label>
                 <input
                   type="number"
                   className="form-input"
@@ -1540,7 +1540,7 @@ export default function AdminDashboard({ token }) {
                   Cancelar
                 </button>
                 <button type="submit" className="nav-btn nav-btn-primary">
-                  Adicionar Quiz
+                  Agregar Quiz
                 </button>
               </div>
             </form>
@@ -1556,7 +1556,7 @@ export default function AdminDashboard({ token }) {
         }}>
           <div className="glass-card" style={{ maxWidth: '480px', width: '100%', border: '1px solid var(--primary-glow)', background: '#0f172a' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
-              <h3 style={{ color: '#fff', fontSize: '1.1rem' }}>Cadastrar Vídeo-Aula</h3>
+              <h3 style={{ color: '#fff', fontSize: '1.1rem' }}>Registrar Video-Clase</h3>
               <button type="button" className="nav-btn nav-btn-ghost" onClick={() => setShowLessonModal(false)}>
                 <X size={18} />
               </button>
@@ -1564,12 +1564,12 @@ export default function AdminDashboard({ token }) {
 
             <form onSubmit={handleSaveLesson}>
               <div className="form-group">
-                <label className="form-label">Título da Aula</label>
+                <label className="form-label">Título de la Clase</label>
                 <input
                   type="text"
                   className="form-input"
                   style={{ paddingLeft: '1rem' }}
-                  placeholder="Ex: Aula 1: Como usar a Matriz"
+                  placeholder="Ej: Clase 1: Cómo usar la Matriz"
                   value={lessonForm.title}
                   onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })}
                   required
@@ -1577,7 +1577,7 @@ export default function AdminDashboard({ token }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Link do Vídeo (YouTube, Vimeo, MP4)</label>
+                <label className="form-label">Enlace del Video (YouTube, Vimeo, MP4)</label>
                 <input
                   type="url"
                   className="form-input"
@@ -1591,7 +1591,7 @@ export default function AdminDashboard({ token }) {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">Duração (Ex: 12:45)</label>
+                  <label className="form-label">Duración (Ej: 12:45)</label>
                   <input
                     type="text"
                     className="form-input"
@@ -1603,7 +1603,7 @@ export default function AdminDashboard({ token }) {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Ordem</label>
+                  <label className="form-label">Orden</label>
                   <input
                     type="number"
                     className="form-input"
@@ -1615,11 +1615,11 @@ export default function AdminDashboard({ token }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Descrição da Aula</label>
+                <label className="form-label">Descripción de la Clase</label>
                 <textarea
                   className="form-input"
                   style={{ paddingLeft: '1rem', minHeight: '60px', fontFamily: 'inherit' }}
-                  placeholder="Resumo do conteúdo..."
+                  placeholder="Resumen del contenido..."
                   value={lessonForm.description}
                   onChange={(e) => setLessonForm({ ...lessonForm, description: e.target.value })}
                 />
@@ -1630,7 +1630,7 @@ export default function AdminDashboard({ token }) {
                   Cancelar
                 </button>
                 <button type="submit" className="nav-btn nav-btn-primary">
-                  Cadastrar Aula
+                  Registrar Clase
                 </button>
               </div>
             </form>
@@ -1638,7 +1638,7 @@ export default function AdminDashboard({ token }) {
         </div>
       )}
 
-      {/* MODAL DE REDEFINIÇÃO DE SENHA PELO ADMIN */}
+      {/* MODAL DE REDEFINICIÓN DE CONTRASEÑA POR EL ADMIN */}
       {resetModalUser && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -1649,7 +1649,7 @@ export default function AdminDashboard({ token }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
               <h3 style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>
                 <Key size={20} style={{ color: '#fbbf24' }} />
-                Redefinir Senha de Afiliado
+                Redefinir Contraseña de Afiliado
               </h3>
               <button type="button" className="nav-btn nav-btn-ghost" onClick={() => setResetModalUser(null)}>
                 <X size={18} />
@@ -1657,7 +1657,7 @@ export default function AdminDashboard({ token }) {
             </div>
 
             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.2rem' }}>
-              Defina uma nova senha de acesso para <strong>{resetModalUser.name}</strong> ({resetModalUser.email}).
+              Defina una nueva contraseña de acceso para <strong>{resetModalUser.name}</strong> ({resetModalUser.email}).
             </p>
 
             {resetModalError && (
@@ -1676,13 +1676,13 @@ export default function AdminDashboard({ token }) {
 
             <form onSubmit={handleAdminResetPassword}>
               <div className="form-group">
-                <label className="form-label">Nova Senha</label>
+                <label className="form-label">Nueva Contraseña</label>
                 <div className="input-wrapper">
                   <Lock className="input-icon" size={18} />
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Digite a nova senha..."
+                    placeholder="Ingrese la nueva contraseña..."
                     value={newPasswordInput}
                     onChange={(e) => setNewPasswordInput(e.target.value)}
                     required
@@ -1695,7 +1695,7 @@ export default function AdminDashboard({ token }) {
                   Cancelar
                 </button>
                 <button type="submit" className="nav-btn nav-btn-primary" disabled={resetModalLoading}>
-                  {resetModalLoading ? 'Salvando...' : 'Salvar Nova Senha'}
+                  {resetModalLoading ? 'Guardando...' : 'Guardar Nueva Contraseña'}
                 </button>
               </div>
             </form>
@@ -1705,6 +1705,5 @@ export default function AdminDashboard({ token }) {
     </div>
   );
 }
-
 
 

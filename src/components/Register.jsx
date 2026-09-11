@@ -7,7 +7,7 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
   const [password, setPassword] = useState('');
   const [sponsorIdentifier, setSponsorIdentifier] = useState('');
   
-  // Estados de Validação do Patrocinador
+  // Estados de Validación del Patrocinador
   const [sponsorStatus, setSponsorStatus] = useState({
     loading: false,
     valid: false,
@@ -18,7 +18,7 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Capturar parâmetro ?ref=CODIGO da URL automaticamente
+  // Capturar parámetro ?ref=CODIGO de la URL automáticamente
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const refParam = params.get('ref');
@@ -31,14 +31,14 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
     }
   }, []);
 
-  // Função de Validação do Patrocinador via API
+  // Función de Validación del Patrocinador vía API
   const validateSponsor = async (identifier, isUrlParam = false) => {
     if (!identifier || identifier.trim() === '') {
       setSponsorStatus({
         loading: false,
         valid: false,
         sponsor: null,
-        message: 'O campo do patrocinador é obrigatório.'
+        message: 'El campo del patrocinador es obligatorio.'
       });
       return;
     }
@@ -58,7 +58,7 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
         });
       } else {
         if (isUrlParam && identifier.trim() !== 'ADMIN100') {
-          // Fallback para ADMIN100 se o parâmetro da URL for inválido
+          // Respaldo para ADMIN100 si el parámetro de la URL no es válido
           setSponsorIdentifier('ADMIN100');
           validateSponsor('ADMIN100', false);
         } else {
@@ -66,7 +66,7 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
             loading: false,
             valid: false,
             sponsor: null,
-            message: data.message || 'Patrocinador não encontrado.'
+            message: data.message || 'Patrocinador no encontrado.'
           });
         }
       }
@@ -75,13 +75,13 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
         loading: false,
         valid: false,
         sponsor: null,
-        message: 'Erro ao conectar ao servidor para validar o patrocinador.'
+        message: 'Error al conectar con el servidor para validar el patrocinador.'
       });
     }
   };
 
 
-  // Handler de mudança no campo do Patrocinador com debounce
+  // Handler de cambio en el campo del Patrocinador con debounce
   const handleSponsorChange = (e) => {
     const value = e.target.value;
     setSponsorIdentifier(value);
@@ -93,7 +93,7 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
         loading: false,
         valid: false,
         sponsor: null,
-        message: 'Digite ao menos 3 caracteres do código ou e-mail.'
+        message: 'Ingrese al menos 3 caracteres del código o correo electrónico.'
       });
     }
   };
@@ -103,7 +103,7 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
     setError('');
 
     if (!sponsorStatus.valid) {
-      setError('Por favor, informe um patrocinador válido antes de continuar.');
+      setError('Por favor, ingrese un patrocinador válido antes de continuar.');
       return;
     }
 
@@ -126,11 +126,11 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
         const text = await res.text();
         data = text ? JSON.parse(text) : {};
       } catch {
-        throw new Error(`Resposta inválida do servidor (HTTP ${res.status}). Verifique se o backend está rodando na porta 3001.`);
+        throw new Error(`Respuesta inválida del servidor (HTTP ${res.status}). Verifique si el backend está ejecutándose en el puerto 3001.`);
       }
 
       if (!res.ok) {
-        throw new Error(data.error || 'Erro ao efetuar o cadastro.');
+        throw new Error(data.error || 'Error al realizar el registro.');
       }
 
       onRegisterSuccess(data.token, data.user);
@@ -145,8 +145,8 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
     <div className="auth-wrapper">
       <div className="glass-card auth-card">
         <div className="auth-header">
-          <h2>Cadastro de Afiliado</h2>
-          <p>Entre para a rede e comece a construir sua equipe</p>
+          <h2>Registro de Afiliado</h2>
+          <p>Únete a la red y comienza a construir tu equipo</p>
         </div>
 
         {error && (
@@ -158,13 +158,13 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Nome Completo</label>
+            <label className="form-label">Nombre Completo</label>
             <div className="input-wrapper">
               <User className="input-icon" size={18} />
               <input
                 type="text"
                 className="form-input"
-                placeholder="Ex: João da Silva"
+                placeholder="Ej: Juan Pérez"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -173,13 +173,13 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Endereço de E-mail</label>
+            <label className="form-label">Correo Electrónico</label>
             <div className="input-wrapper">
               <Mail className="input-icon" size={18} />
               <input
                 type="email"
                 className="form-input"
-                placeholder="seu.email@exemplo.com"
+                placeholder="tu.email@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -188,13 +188,13 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Senha de Acesso</label>
+            <label className="form-label">Contraseña de Acceso</label>
             <div className="input-wrapper">
               <Lock className="input-icon" size={18} />
               <input
                 type="password"
                 className="form-input"
-                placeholder="Crie uma senha segura"
+                placeholder="Crea una contraseña segura"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -203,10 +203,10 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
             </div>
           </div>
 
-          {/* CAMPO OBRIGATÓRIO DE PATROCINADOR COM VALIDAÇÃO EM TEMPO REAL */}
+          {/* CAMPO OBLIGATORIO DE PATROCINADOR CON VALIDACIÓN EN TIEMPO REAL */}
           <div className="form-group" style={{ marginTop: '1.5rem' }}>
             <label className="form-label" style={{ color: '#67e8f9', fontWeight: 700 }}>
-              Quem te indicou? (Código ou E-mail do Patrocinador)*
+              ¿Quién te refirió? (Código o Correo Electrónico del Patrocinador)*
             </label>
             <div className="input-wrapper">
               <UserCheck className="input-icon" size={18} style={{ color: 'var(--accent-cyan)' }} />
@@ -214,18 +214,18 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
                 type="text"
                 className="form-input"
                 style={{ borderColor: sponsorStatus.valid ? 'var(--accent-emerald)' : 'var(--border-color)' }}
-                placeholder="Ex: ADMIN100 ou carlos@email.com"
+                placeholder="Ej: ADMIN100 o carlos@email.com"
                 value={sponsorIdentifier}
                 onChange={handleSponsorChange}
                 required
               />
             </div>
 
-            {/* Badge Dinâmica de Status do Patrocinador */}
+            {/* Badge Dinámica de Estado del Patrocinador */}
             {sponsorStatus.loading ? (
               <div className="sponsor-badge sponsor-badge-loading">
                 <Loader2 size={16} className="animate-spin" />
-                <span>Verificando patrocinador no sistema...</span>
+                <span>Verificando patrocinador en el sistema...</span>
               </div>
             ) : sponsorStatus.valid ? (
               <div className="sponsor-badge sponsor-badge-valid">
@@ -245,14 +245,14 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
             className="btn-submit" 
             disabled={loading || !sponsorStatus.valid}
           >
-            {loading ? 'Criando Conta...' : 'Concluir Cadastro na Rede'}
+            {loading ? 'Creando Cuenta...' : 'Completar Registro en la Red'}
           </button>
         </form>
 
         <div className="auth-footer">
-          Já possui um cadastro?{' '}
+          ¿Ya tienes una cuenta?{' '}
           <a href="#login" onClick={(e) => { e.preventDefault(); switchToLogin(); }}>
-            Acesse seu painel
+            Accede a tu panel
           </a>
         </div>
       </div>

@@ -7,7 +7,7 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Estado do Modal "Esqueci minha senha"
+  // Estado del Modal "Olvidé mi contraseña"
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -32,11 +32,11 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
         const text = await res.text();
         data = text ? JSON.parse(text) : {};
       } catch {
-        throw new Error(`Resposta inválida do servidor (HTTP ${res.status}). Verifique se o backend está rodando na porta 3001.`);
+        throw new Error(`Respuesta inválida del servidor (HTTP ${res.status}). Verifica que el backend esté ejecutándose en el puerto 3001.`);
       }
 
       if (!res.ok) {
-        throw new Error(data.error || 'Erro ao realizar login');
+        throw new Error(data.error || 'Error al iniciar sesión');
       }
 
       onLoginSuccess(data.token, data.user);
@@ -65,10 +65,10 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
         const text = await res.text();
         data = text ? JSON.parse(text) : {};
       } catch {
-        throw new Error(`Resposta inválida do servidor (HTTP ${res.status}). Verifique se o backend está rodando na porta 3001.`);
+        throw new Error(`Respuesta inválida del servidor (HTTP ${res.status}). Verifica que el backend esté ejecutándose en el puerto 3001.`);
       }
 
-      if (!res.ok) throw new Error(data.error || 'Erro ao redefinir a senha');
+      if (!res.ok) throw new Error(data.error || 'Error al redefinir la contraseña');
 
       setResetSuccess(data.message);
       setTimeout(() => {
@@ -95,24 +95,24 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
     <div className="auth-wrapper">
       <div className="glass-card auth-card">
         <div className="auth-header">
-          <h2>Acesse sua Conta</h2>
-          <p>Gerencie sua rede de afiliados e acompanhe seus indicados</p>
+          <h2>Accede a tu Cuenta</h2>
+          <p>Administra tu red de afiliados y acompana tus referidos</p>
         </div>
 
         <div className="demo-box">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}>
             <Sparkles size={16} style={{ color: 'var(--accent-cyan)' }} />
-            <span>Atalhos de Demonstração (Senha: 123456):</span>
+            <span>Accesos de Demostración (Contraseña: 123456):</span>
           </div>
           <div className="demo-pills">
             <button className="demo-pill" type="button" onClick={() => fillDemoAccount('admin@sistema.com')}>
               Admin Raiz
             </button>
             <button className="demo-pill" type="button" onClick={() => fillDemoAccount('carlos@email.com')}>
-              Carlos (Nível 1)
+              Carlos (Nivel 1)
             </button>
             <button className="demo-pill" type="button" onClick={() => fillDemoAccount('bruno@email.com')}>
-              Bruno (Nível 2)
+              Bruno (Nivel 2)
             </button>
           </div>
         </div>
@@ -132,7 +132,7 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
               <input
                 type="email"
                 className="form-input"
-                placeholder="seu.email@exemplo.com"
+                placeholder="tu.email@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -142,7 +142,7 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
 
           <div className="form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-              <label className="form-label" style={{ margin: 0 }}>Senha</label>
+              <label className="form-label" style={{ margin: 0 }}>Contraseña</label>
               <a
                 href="#forgot-password"
                 style={{ fontSize: '0.8rem', color: '#67e8f9', textDecoration: 'none' }}
@@ -154,7 +154,7 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
                   setShowForgotModal(true);
                 }}
               >
-                Esqueci minha senha
+                Olvidé mi contraseña
               </a>
             </div>
             <div className="input-wrapper">
@@ -171,19 +171,23 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
           </div>
 
           <button type="submit" className="btn-submit" disabled={loading}>
-            {loading ? 'Autenticando...' : 'Entrar no Painel'}
+            {loading ? 'Autenticando...' : 'Entrar al Panel'}
           </button>
         </form>
 
         <div className="auth-footer">
-          Ainda não possui conta?{' '}
+          ¿No tienes cuenta aún?{' '}
           <a href="#register" onClick={(e) => { e.preventDefault(); switchToRegister(); }}>
-            Cadastre-se com uma indicação
+            Regístrate con un referido
           </a>
         </div>
+
+        <a href="/vendas" className="btn-vendas">
+          Conoce nuestros planes
+        </a>
       </div>
 
-      {/* MODAL DE RECUPERAÇÃO DE SENHA PELO USUÁRIO */}
+      {/* MODAL DE RECUPERACIÓN DE CONTRASEÑA POR EL USUARIO */}
       {showForgotModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -194,7 +198,7 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
               <h3 style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.15rem' }}>
                 <Key size={20} style={{ color: '#67e8f9' }} />
-                Recuperar Senha
+                Recuperar Contraseña
               </h3>
               <button type="button" className="nav-btn nav-btn-ghost" onClick={() => setShowForgotModal(false)}>
                 <X size={18} />
@@ -202,7 +206,7 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
             </div>
 
             <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '1.2rem' }}>
-              Informe o seu e-mail cadastrado e defina uma nova senha para acessar sua conta Epi.
+              Ingresa tu correo electrónico registrado y define una nueva contraseña para acceder a tu cuenta Epi.
             </p>
 
             {resetError && (
@@ -221,13 +225,13 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
 
             <form onSubmit={handleResetPassword}>
               <div className="form-group">
-                <label className="form-label">E-mail da Conta</label>
+                <label className="form-label">Correo de la Cuenta</label>
                 <div className="input-wrapper">
                   <Mail className="input-icon" size={18} />
                   <input
                     type="email"
                     className="form-input"
-                    placeholder="seu.email@exemplo.com"
+                    placeholder="tu.email@ejemplo.com"
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
                     required
@@ -236,13 +240,13 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Nova Senha</label>
+                <label className="form-label">Nueva Contraseña</label>
                 <div className="input-wrapper">
                   <Lock className="input-icon" size={18} />
                   <input
                     type="password"
                     className="form-input"
-                    placeholder="Sua nova senha..."
+                    placeholder="Tu nueva contraseña..."
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
@@ -255,7 +259,7 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
                   Cancelar
                 </button>
                 <button type="submit" className="nav-btn nav-btn-primary" disabled={resetLoading}>
-                  {resetLoading ? 'Redefinindo...' : 'Confirmar Nova Senha'}
+                  {resetLoading ? 'Redefiniendo...' : 'Confirmar Nueva Contraseña'}
                 </button>
               </div>
             </form>
@@ -265,4 +269,3 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
     </div>
   );
 }
-

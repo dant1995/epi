@@ -2,29 +2,29 @@ import React, { useState } from 'react';
 import { X, Database, Copy, Check, Terminal, ExternalLink } from 'lucide-react';
 
 const SUPABASE_SQL = `-- ==========================================================
--- BANCO DE DADOS SUPABASE / POSTGRESQL - PROJETO Epi 3x3
--- Ladder Shield Prosperity Circle (Matriz Forçada Fechada Base 3)
+-- BASE DE DATOS SUPABASE / POSTGRESQL - PROYECTO Epi 3x3
+-- Ladder Shield Prosperity Circle (Matriz Forzada Cerrada Base 3)
 -- ==========================================================
 
--- 1. Tabela de Usuários Epi
+-- 1. Tabla de Usuarios Epi
 CREATE TABLE IF NOT EXISTS public.users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     referral_code VARCHAR(50) NOT NULL UNIQUE,
-    sponsor_id INT REFERENCES public.users(id) ON DELETE SET NULL,     -- Patrocinador Original (Quem Convidou)
-    placement_id INT REFERENCES public.users(id) ON DELETE SET NULL,   -- Nó de Posicionamento na Matriz 3x3 (Derrame)
-    position INT DEFAULT 1,                                            -- Posicionamento perna (1=Esq, 2=Centro, 3=Dir)
+    sponsor_id INT REFERENCES public.users(id) ON DELETE SET NULL,     -- Patrocinador Original (Quien Invitó)
+    placement_id INT REFERENCES public.users(id) ON DELETE SET NULL,   -- Nodo de Posicionamiento en la Matriz 3x3 (Derrame)
+    position INT DEFAULT 1,                                            -- Posicionamiento pierna (1=Izq, 2=Centro, 3=Der)
     role VARCHAR(20) DEFAULT 'user',
-    registration_fee NUMERIC(10,2) DEFAULT 60.00,                      -- Taxa de Inscrição ($US 60)
-    fee_refunded BOOLEAN DEFAULT FALSE,                                 -- Liberado após 3 Maestros
-    is_active BOOLEAN DEFAULT TRUE,                                     -- Trava de Ativação Mensal
+    registration_fee NUMERIC(10,2) DEFAULT 60.00,                      -- Tarifa de Inscripción ($US 60)
+    fee_refunded BOOLEAN DEFAULT FALSE,                                 -- Liberado después de 3 Maestros
+    is_active BOOLEAN DEFAULT TRUE,                                     -- Traba de Activación Mensual
     current_cycle VARCHAR(50) DEFAULT 'Socio Bronce',                  -- Ciclo Corporativo
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Garantir que colunas existam em tabelas já criadas
+-- Garantizar que columnas existan en tablas ya creadas
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS placement_id INT REFERENCES public.users(id) ON DELETE SET NULL;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS position INT DEFAULT 1;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS registration_fee NUMERIC(10,2) DEFAULT 60.00;
@@ -32,22 +32,22 @@ ALTER TABLE public.users ADD COLUMN IF NOT EXISTS fee_refunded BOOLEAN DEFAULT F
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS current_cycle VARCHAR(50) DEFAULT 'Socio Bronce';
 
--- Índices de Alta Performance
+-- Índices de Alto Rendimiento
 CREATE INDEX IF NOT EXISTS idx_users_sponsor_id ON public.users(sponsor_id);
 CREATE INDEX IF NOT EXISTS idx_users_placement_id ON public.users(placement_id);
 CREATE INDEX IF NOT EXISTS idx_users_referral_code ON public.users(referral_code);
 
--- 2. Tabela de Carteira Digital (Wallet)
+-- 2. Tabla de Billetera Digital (Wallet)
 CREATE TABLE IF NOT EXISTS public.wallets (
     id SERIAL PRIMARY KEY,
     user_id INT UNIQUE REFERENCES public.users(id) ON DELETE CASCADE,
-    balance NUMERIC(10,2) DEFAULT 0.00,          -- Saldo Disponível para Saque
-    pending_balance NUMERIC(10,2) DEFAULT 0.00,  -- Saldo em Solicitação de Saque
-    total_earned NUMERIC(10,2) DEFAULT 0.00,     -- Total de Comissões Já Ganhas
+    balance NUMERIC(10,2) DEFAULT 0.00,          -- Saldo Disponible para Retiro
+    pending_balance NUMERIC(10,2) DEFAULT 0.00,  -- Saldo en Solicitud de Retiro
+    total_earned NUMERIC(10,2) DEFAULT 0.00,     -- Total de Comisiones Ya Ganadas
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Tabela de Solicitações de Saque (Withdrawals)
+-- 3. Tabla de Solicitudes de Retiro (Withdrawals)
 CREATE TABLE IF NOT EXISTS public.withdrawals (
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES public.users(id) ON DELETE CASCADE,
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS public.withdrawals (
     processed_at TIMESTAMP WITH TIME ZONE
 );
 
--- 4. Tabela de Cursos (LMS)
+-- 4. Tabla de Cursos (LMS)
 CREATE TABLE IF NOT EXISTS public.courses (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS public.courses (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 5. Tabela de Módulos do Curso
+-- 5. Tabla de Módulos del Curso
 CREATE TABLE IF NOT EXISTS public.modules (
     id SERIAL PRIMARY KEY,
     course_id INT REFERENCES public.courses(id) ON DELETE CASCADE,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS public.modules (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 6. Tabela de Aulas (Lessons)
+-- 6. Tabla de Clases (Lessons)
 CREATE TABLE IF NOT EXISTS public.lessons (
     id SERIAL PRIMARY KEY,
     module_id INT REFERENCES public.modules(id) ON DELETE CASCADE,
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS public.lessons (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 7. Tabela de Progresso de Aulas do Aluno
+-- 7. Tabla de Progreso de Clases del Alumno
 CREATE TABLE IF NOT EXISTS public.lesson_progress (
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES public.users(id) ON DELETE CASCADE,
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS public.lesson_progress (
     UNIQUE(user_id, lesson_id)
 );
 
--- PERMISSÕES E DESABILITAR RLS PARA ACESSO DIRETO DA API NODE
+-- PERMISOS Y DESHABILITAR RLS PARA ACCESO DIRECTO DE LA API NODE
 ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wallets DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.withdrawals DISABLE ROW LEVEL SECURITY;
@@ -107,7 +107,7 @@ ALTER TABLE public.modules DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.lessons DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.lesson_progress DISABLE ROW LEVEL SECURITY;
 
--- 8. Função Recursiva para Obter a Matriz Epi (3 Camadas: 3, 9, 27 = 39 pessoas)
+-- 8. Función Recursiva para Obtener la Matriz Epi (3 Capas: 3, 9, 27 = 39 personas)
 CREATE OR REPLACE FUNCTION public.get_epi_matrix(root_user_id INT)
 RETURNS TABLE (
     id INT,
@@ -180,7 +180,7 @@ export default function SupabaseModal({ onClose }) {
         <div className="modal-header">
           <h3 style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '1.3rem' }}>
             <Database size={24} style={{ color: 'var(--accent-emerald)' }} />
-            Integração com Banco Supabase / PostgreSQL
+            Integración con Base de Datos Supabase / PostgreSQL
           </h3>
           <button className="close-modal-btn" onClick={onClose}>
             <X size={24} />
@@ -188,12 +188,12 @@ export default function SupabaseModal({ onClose }) {
         </div>
 
         <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-          Copie e execute o script SQL abaixo no **SQL Editor** do Supabase para liberar as permissões RLS e criar todas as tabelas da Matriz Epi, Carteira Digital e Módulo de Cursos (LMS):
+          Copie y ejecute el script SQL a continuación en el **SQL Editor** de Supabase para liberar los permisos RLS y crear todas las tablas de la Matriz Epi, Billetera Digital y Módulo de Cursos (LMS):
         </p>
 
         <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Terminal size={16} /> Script Completo de Banco Supabase (schema.sql)
+            <Terminal size={16} /> Script Completo de Base de Datos Supabase (schema.sql)
           </span>
           <button className={`btn-copy ${copied ? 'copied' : ''}`} onClick={handleCopy}>
             {copied ? <Check size={16} /> : <Copy size={16} />}
@@ -207,7 +207,7 @@ export default function SupabaseModal({ onClose }) {
 
         <div style={{ marginTop: '1.5rem', textAlign: 'right' }}>
           <button className="nav-btn nav-btn-primary" onClick={onClose}>
-            Entendi, Fechar
+            Entendido, Cerrar
           </button>
         </div>
       </div>

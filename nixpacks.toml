@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "sqlite", "python3", "gcc", "gnumake"]
+nixPkgs = ["nodejs_22"]
 
 [phases.install]
 cmds = ["npm install"]

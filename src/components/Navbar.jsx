@@ -1,43 +1,57 @@
-import React from 'react';
-import { Network, UserCheck, Shield, LogOut, Database, User, GraduationCap } from 'lucide-react';
+import React, { useState } from 'react';
+import { Network, UserCheck, Shield, LogOut, Database, User, GraduationCap, Menu, X } from 'lucide-react';
 
 export default function Navbar({ currentUser, activeTab, setActiveTab, onLogout, onOpenSupabaseModal }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleNav = (tab) => {
+    setActiveTab(tab);
+    setMobileOpen(false);
+  };
+
   return (
     <nav className="navbar">
       <div className="logo-brand">
         <img src="/logo-epi.jpeg" alt="Epi Logo" style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover' }} />
         <span style={{ fontSize: '1.4rem', fontWeight: 800 }}>Epi</span>
+        <button
+          className="navbar-toggle"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Menu"
+        >
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </div>
 
       {currentUser ? (
-        <div className="nav-links">
-          <button 
+        <div className={`nav-links ${mobileOpen ? 'nav-links-open' : ''}`}>
+          <button
             className={`nav-btn ${activeTab === 'dashboard' ? 'nav-btn-primary' : 'nav-btn-ghost'}`}
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => handleNav('dashboard')}
           >
-            <UserCheck size={16} /> Meu Painel
+            <UserCheck size={16} /> Mi Panel
           </button>
 
-          <button 
+          <button
             className={`nav-btn ${activeTab === 'courses' ? 'nav-btn-primary' : 'nav-btn-ghost'}`}
-            onClick={() => setActiveTab('courses')}
+            onClick={() => handleNav('courses')}
           >
             <GraduationCap size={16} /> Cursos LMS
           </button>
 
           {currentUser.role === 'admin' && (
-            <button 
+            <button
               className={`nav-btn ${activeTab === 'admin' ? 'nav-btn-primary' : 'nav-btn-ghost'}`}
-              onClick={() => setActiveTab('admin')}
+              onClick={() => handleNav('admin')}
             >
-              <Shield size={16} /> Painel Admin
+              <Shield size={16} /> Panel Admin
             </button>
           )}
 
-          <button 
+          <button
             className="nav-btn nav-btn-outline"
-            onClick={onOpenSupabaseModal}
-            title="Ver instrução e script de Banco Supabase"
+            onClick={() => { onOpenSupabaseModal(); setMobileOpen(false); }}
+            title="Ver instrucción y script de Base de Datos Supabase"
           >
             <Database size={16} /> Supabase SQL
           </button>
@@ -52,27 +66,27 @@ export default function Navbar({ currentUser, activeTab, setActiveTab, onLogout,
             </div>
           </div>
 
-          <button className="nav-btn nav-btn-ghost" onClick={onLogout} title="Sair do sistema">
-            <LogOut size={16} /> Sair
+          <button className="nav-btn nav-btn-ghost" onClick={() => { onLogout(); setMobileOpen(false); }} title="Salir del sistema">
+            <LogOut size={16} /> Salir
           </button>
         </div>
       ) : (
-        <div className="nav-links">
-          <button 
+        <div className={`nav-links ${mobileOpen ? 'nav-links-open' : ''}`}>
+          <button
             className={`nav-btn ${activeTab === 'login' ? 'nav-btn-primary' : 'nav-btn-ghost'}`}
-            onClick={() => setActiveTab('login')}
+            onClick={() => handleNav('login')}
           >
-            Entrar
+            Iniciar sesión
           </button>
-          <button 
+          <button
             className={`nav-btn ${activeTab === 'register' ? 'nav-btn-primary' : 'nav-btn-outline'}`}
-            onClick={() => setActiveTab('register')}
+            onClick={() => handleNav('register')}
           >
-            Cadastrar-se
+            Registrarse
           </button>
-          <button 
+          <button
             className="nav-btn nav-btn-outline"
-            onClick={onOpenSupabaseModal}
+            onClick={() => { onOpenSupabaseModal(); setMobileOpen(false); }}
           >
             <Database size={16} /> SQL Supabase
           </button>

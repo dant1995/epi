@@ -13,9 +13,9 @@ const cycles = [
     icon: <Award size={28} />,
     color: '#cd7f32',
     gradient: 'linear-gradient(135deg, #cd7f32 0%, #a0522d 100%)',
-    product: 'Curso Basico de Marketing Digital',
-    bonus: '$20 por indicacao direta',
-    refund: '$60 ao completar 3 indicados',
+    product: 'Curso Básico de Marketing Digital',
+    bonus: '$20 por referencia directa',
+    refund: '$60 al completar 3 referidos',
     physical: false,
     popular: false
   },
@@ -26,7 +26,7 @@ const cycles = [
     icon: <Star size={28} />,
     color: '#cbd5e1',
     gradient: 'linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%)',
-    product: 'Modulo Intermediario/Avanzado de Estrategias y Ventas',
+    product: 'Módulo Intermediario/Avanzado de Estrategias y Ventas',
     bonus: 'Acceso a contenido exclusivo',
     refund: null,
     physical: false,
@@ -39,8 +39,8 @@ const cycles = [
     icon: <Gem size={28} />,
     color: '#fbbf24',
     gradient: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
-    product: 'Kit Vitaminas/Suplementos + Modulo Master de Liderazgo',
-    bonus: 'Producto fisico incluido',
+    product: 'Kit Vitaminas/Suplementos + Módulo Master de Liderazgo',
+    bonus: 'Producto físico incluido',
     refund: null,
     physical: true,
     popular: true
@@ -52,7 +52,7 @@ const cycles = [
     icon: <Crown size={28} />,
     color: '#38bdf8',
     gradient: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
-    product: 'Linea Completa de Suplementos + Inmersion Ejecutiva Digital',
+    product: 'Línea Completa de Suplementos + Inmersión Ejecutiva Digital',
     bonus: 'Acceso VIP ilimitado',
     refund: null,
     physical: true,
@@ -65,8 +65,8 @@ const cycles = [
     icon: <Sparkles size={28} />,
     color: '#c084fc',
     gradient: 'linear-gradient(135deg, #c084fc 0%, #9333ea 100%)',
-    product: 'Kit Alta Performance + Consejo de Estrategia y Mentorias Vitalicio',
-    bonus: 'Mentoria vitalicia',
+    product: 'Kit Alta Performance + Consejo de Estrategia y Mentorías Vitalicio',
+    bonus: 'Mentoría vitalicia',
     refund: null,
     physical: true,
     popular: false
@@ -76,32 +76,32 @@ const cycles = [
 const steps = [
   {
     icon: <Users size={32} />,
-    title: 'Registrate y Elige tu Ciclo',
-    description: 'Crea tu cuenta gratuita y selecciona el ciclo Bronze ($80) para comenzar. Recibes acceso inmediato al Curso Basico de Marketing Digital.'
+    title: 'Regístrate y Elige tu Ciclo',
+    description: 'Crea tu cuenta gratuita y selecciona el ciclo Bronze ($80) para comenzar. Recibes acceso inmediato al Curso Básico de Marketing Digital.'
   },
   {
     icon: <Layers size={32} />,
     title: 'Construye tu Matriz 3x3',
-    description: 'Invita a 3 personas directamente. El sistema de derrame automatico completa las capas siguientes (9 + 27 = 39 miembros).'
+    description: 'Invita a 3 personas directamente. El sistema de derrame automático completa las capas siguientes (3 + 9 + 27 = 39 miembros).'
   },
   {
     icon: <DollarSign size={32} />,
     title: 'Genera Comisiones y Cashback',
-    description: 'Gana $20 por cada indicado directo en Bronze. Al completar tu matriz, recibe $60 de reembolso automatico en tu billetera digital.'
+    description: 'Gana comisiones por cada referido directo. Al completar tu matriz, recibe reembolso automático en tu billetera digital.'
   },
   {
     icon: <TrendingUp size={32} />,
     title: 'Escala y Upgrade tus Ciclos',
-    description: 'Reinvierte tus gananzas para subir a Prata, Ouro, Platino o Diamante. Los ciclos superiores incluyen productos fisicos y beneficios exclusivos.'
+    description: 'Reinvierte tus ganancias para subir a Prata, Ouro, Platino o Diamante. Los ciclos superiores incluyen productos físicos y beneficios exclusivos.'
   }
 ];
 
 const HOTMART_LINKS = {
-  bronze: '#checkout-bronze',
-  prata: '#checkout-prata',
-  ouro: '#checkout-ouro',
-  platino: '#checkout-platino',
-  diamante: '#checkout-diamante'
+  bronze: "https://pay.hotmart.com/K107501131C?bid=1788914299750",
+  prata: "https://pay.hotmart.com/I107531826E",
+  ouro: "https://pay.hotmart.com/F107532075Y",
+  platino: "https://pay.hotmart.com/A107532217R",
+  diamante: "https://pay.hotmart.com/L107532252A",
 };
 
 export default function LandingPage({ onNavigate }) {
@@ -144,7 +144,7 @@ export default function LandingPage({ onNavigate }) {
             onMouseEnter={e => { e.target.style.transform = 'translateY(-1px)'; }}
             onMouseLeave={e => { e.target.style.transform = 'translateY(0)'; }}
           >
-            Cadastrar
+            Registrarse
           </button>
         </div>
       </header>
@@ -179,7 +179,7 @@ export default function LandingPage({ onNavigate }) {
             fontSize: '1.15rem', color: '#94a3b8', lineHeight: 1.7,
             maxWidth: '650px', margin: '0 auto 2rem'
           }}>
-            Sistema automatizado de 5 ciclos progressivos. 
+            Sistema automatizado de 5 ciclos progresivos. 
             Construye tu red de <strong style={{ color: '#cbd5e1' }}>39 afiliados</strong> en una Matriz Forzada Cerrada 
             y genera ganancias recurrentes bajo la estructura de{' '}
             <strong style={{ color: '#cbd5e1' }}>Lojascapel LLC</strong>.
@@ -216,16 +216,53 @@ export default function LandingPage({ onNavigate }) {
             </a>
           </div>
 
+          {/* Video */}
+          <div style={{
+            marginTop: '3rem',
+            display: 'flex',
+            justifyContent: 'center',
+            width: '100%',
+            maxWidth: '720px',
+            marginLeft: 'auto',
+            marginRight: 'auto'
+          }}>
+            <div style={{
+              position: 'relative',
+              paddingBottom: '56.25%',
+              height: 0,
+              width: '100%',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+              border: '1px solid rgba(99,102,241,0.2)'
+            }}>
+              <iframe
+                src="https://www.youtube.com/embed/LEhbHKXZHtg"
+                title="Video explicativo"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  border: 'none'
+                }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+
           {/* Stats */}
           <div style={{
             display: 'flex', justifyContent: 'center', gap: '3rem', marginTop: '3.5rem',
             flexWrap: 'wrap'
           }}>
             {[
-              { value: '5', label: 'Ciclos Progressivos' },
+              { value: '5', label: 'Ciclos Progresivos' },
               { value: '39', label: 'Posiciones en la Matriz' },
               { value: '$60', label: 'Cashback en Bronze' },
-              { value: '7', label: 'Dias de Garantia' }
+              { value: '7', label: 'Días de Garantía' }
             ].map((stat, i) => (
               <div key={i} style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#6366f1' }}>{stat.value}</div>
@@ -240,10 +277,10 @@ export default function LandingPage({ onNavigate }) {
       <section id="ciclos" style={{ padding: '4rem 2rem', maxWidth: '1280px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <h2 style={{ fontSize: '2rem', fontWeight: 900, color: '#fff', marginBottom: '0.75rem' }}>
-            Elige tu Nivel de Inversion
+            Elige tu Nivel de Inversión
           </h2>
           <p style={{ color: '#94a3b8', fontSize: '1.05rem', maxWidth: '600px', margin: '0 auto' }}>
-            5 ciclos progresivos con productos digitales, fisicos o ambos. Comienza desde Bronze y escala hasta Diamante.
+            5 ciclos progresivos con productos digitales, físicos o ambos. Comienza desde Bronze y escala hasta Diamante.
           </p>
         </div>
 
@@ -274,7 +311,7 @@ export default function LandingPage({ onNavigate }) {
                   padding: '0.3rem 1rem', borderRadius: '9999px', fontSize: '0.72rem',
                   fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px'
                 }}>
-                  Mais Popular
+                  Más Popular
                 </div>
               )}
 
@@ -308,11 +345,11 @@ export default function LandingPage({ onNavigate }) {
                 )}
                 {cycle.physical && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', color: '#fbbf24', marginBottom: '0.35rem' }}>
-                    <Package size={14} /> Producto fisico incluido
+                    <Package size={14} /> Producto físico incluido
                   </div>
                 )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', color: '#94a3b8' }}>
-                  <Shield size={14} /> Garantia de 7 dias
+                  <Shield size={14} /> Garantía de 7 días
                 </div>
               </div>
 
@@ -331,7 +368,7 @@ export default function LandingPage({ onNavigate }) {
                 onMouseEnter={e => e.target.style.transform = 'translateY(-1px)'}
                 onMouseLeave={e => e.target.style.transform = 'translateY(0)'}
               >
-                Assinar Agora
+                Suscribirse Ahora
               </a>
             </div>
           ))}
@@ -406,7 +443,7 @@ export default function LandingPage({ onNavigate }) {
                 background: 'linear-gradient(135deg, #6366f1, #4f46e5)', color: '#fff',
                 fontWeight: 700, fontSize: '0.95rem'
               }}>
-                Tu (Raiz)
+                Tu (Raíz)
               </div>
               <div style={{ color: '#64748b', fontSize: '1.5rem' }}>|</div>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -428,7 +465,7 @@ export default function LandingPage({ onNavigate }) {
                     background: 'rgba(6, 182, 212, 0.1)', border: '1px solid rgba(6, 182, 212, 0.2)',
                     color: '#67e8f9', fontWeight: 600, fontSize: '0.75rem'
                   }}>
-                    Lider {i + 1}
+                    Líder {i + 1}
                   </div>
                 ))}
               </div>
@@ -456,7 +493,7 @@ export default function LandingPage({ onNavigate }) {
       <section style={{ padding: '4rem 2rem', maxWidth: '1100px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <h2 style={{ fontSize: '2rem', fontWeight: 900, color: '#fff', marginBottom: '0.75rem' }}>
-            Por que EPI?
+              ¿Por qué EPI?
           </h2>
         </div>
         <div style={{
@@ -465,12 +502,12 @@ export default function LandingPage({ onNavigate }) {
           gap: '1.25rem'
         }}>
           {[
-            { icon: <Zap size={22} />, title: 'Activacion Instantanea', desc: 'Accede a tu cursos y plataforma en segundos despues del pago.' },
-            { icon: <Lock size={22} />, title: 'Garantia de 7 Dias', desc: 'Reembolso completo si no estas satisfecho dentro de los primeros 7 dias.' },
-            { icon: <Globe size={22} />, title: 'Operacion Global', desc: 'Plataforma accessible desde cualquier pais. Pagos via Hotmart international.' },
+            { icon: <Zap size={22} />, title: 'Activación Instantánea', desc: 'Accede a tus cursos y plataforma en segundos después del pago.' },
+            { icon: <Lock size={22} />, title: 'Garantía de 7 Días', desc: 'Reembolso completo si no estás satisfecho dentro de los primeros 7 días.' },
+            { icon: <Globe size={22} />, title: 'Operación Global', desc: 'Plataforma accesible desde cualquier país. Pagos vía Hotmart international.' },
             { icon: <TrendingUp size={22} />, title: 'Escalabilidad Real', desc: 'De $80 a $5,000. Crece a tu ritmo con ganancias comprobadas.' },
-            { icon: <Package size={22} />, title: 'Productos Fisicos', desc: 'Ciclos Ouro+ incluyen vitaminas y suplementos de alta calidad.' },
-            { icon: <Users size={22} />, title: 'Comunidad Activa', desc: 'Red de afiliados comprometidos con tu exito y crecimiento.' }
+            { icon: <Package size={22} />, title: 'Productos Físicos', desc: 'Ciclos Ouro+ incluyen vitaminas y suplementos de alta calidad.' },
+            { icon: <Users size={22} />, title: 'Comunidad Activa', desc: 'Red de afiliados comprometidos con tu éxito y crecimiento.' }
           ].map((b, i) => (
             <div key={i} style={{
               display: 'flex', gap: '1rem', alignItems: 'flex-start',
@@ -503,7 +540,7 @@ export default function LandingPage({ onNavigate }) {
             Comienza tu Camino hacia la Libertad Financiera
           </h2>
           <p style={{ color: '#94a3b8', fontSize: '1.05rem', marginBottom: '2rem', lineHeight: 1.7 }}>
-            Unete a miles de afiliados que ya estan construyendo su red con la Matriz EPI 3x3. 
+            Únete a miles de afiliados que ya están construyendo su red con la Matriz EPI 3x3. 
             Tu futuro financiero comienza con un solo paso.
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -519,7 +556,7 @@ export default function LandingPage({ onNavigate }) {
               onMouseEnter={e => e.target.style.transform = 'translateY(-2px)'}
               onMouseLeave={e => e.target.style.transform = 'translateY(0)'}
             >
-              Assinar Agora <ArrowRight size={18} />
+              Suscribirse Ahora <ArrowRight size={18} />
             </a>
           </div>
         </div>
@@ -550,7 +587,7 @@ export default function LandingPage({ onNavigate }) {
               onMouseEnter={e => e.target.style.color = '#fff'}
               onMouseLeave={e => e.target.style.color = '#94a3b8'}
             >
-              Terminos y Condiciones
+              Términos y Condiciones
             </button>
             <button
               onClick={() => onNavigate('login')}
