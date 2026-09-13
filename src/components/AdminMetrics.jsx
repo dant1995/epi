@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { TrendingUp, DollarSign, Users, Gift, Send, Download, Settings, RefreshCw, Mail, CheckCircle2 } from 'lucide-react';
+import { TrendingUp, DollarSign, Users, Gift, Send, Download, Settings, RefreshCw, Mail, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 const COLORS = ['#818cf8', '#34d399', '#fbbf24', '#f472b6', '#38bdf8'];
 
@@ -8,32 +8,51 @@ export default function AdminMetrics({ token }) {
   const [metrics, setMetrics] = useState(null);
   const [commissions, setCommissions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Broadcast state
   const [broadcastSubject, setBroadcastSubject] = useState('');
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [broadcastLoading, setBroadcastLoading] = useState(false);
   const [broadcastResult, setBroadcastResult] = useState('');
 
-  // Settings state
   const [settingsCycles, setSettingsCycles] = useState([]);
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsResult, setSettingsResult] = useState('');
 
   const fetchData = async () => {
     setLoading(true);
+    setError('');
     try {
       const [metricsRes, commRes, cyclesRes] = await Promise.all([
         fetch('/api/admin/metrics', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/admin/commissions', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/admin/cycles', { headers: { Authorization: `Bearer ${token}` } })
       ]);
-      if (metricsRes.ok) setMetrics(await metricsRes.json());
-      if (commRes.ok) { const d = await commRes.json(); setCommissions(d.commissions || []); }
-      if (cyclesRes.ok) { const d = await cyclesRes.json(); setSettingsCycles(d.cycles || []); }
-    } catch (err) { console.error('Erro ao carregar métricas:', err); }
-    finally { setLoading(false); }
+
+      const metricsText = await metricsRes.text();
+      console.log('[AdminMetrics] /api/admin/metrics status:', metricsRes.status, metricsText.substring(0, 200));
+
+      if (metricsRes.ok) {
+        setMetrics(JSON.parse(metricsText));
+      } else {
+        setError(`Erro ao carregar métricas (${metricsRes.status}): ${metricsText.substring(0, 100)}`);
+      }
+
+      if (commRes.ok) {
+        const d = await commRes.json();
+        setCommissions(d.commissions || []);
+      }
+      if (cyclesRes.ok) {
+        const d = await cyclesRes.json();
+        setSettingsCycles(d.cycles || []);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar métricas:', err);
+      setError('Erro de conexão: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchData(); }, [token]);
@@ -49,10 +68,13 @@ export default function AdminMetrics({ token }) {
         body: JSON.stringify({ subject: broadcastSubject, message: broadcastMessage })
       });
       const data = await res.json();
-      setBroadcastResult(data.message || data.error);
+      setBroadcastResult(data.message || data.error || 'Erro desconhecido');
       if (res.ok) { setBroadcastSubject(''); setBroadcastMessage(''); }
-    } catch (err) { setBroadcastResult('Erro ao enviar.'); }
-    finally { setBroadcastLoading(false); }
+    } catch (err) {
+      setBroadcastResult('Erro de conexão: ' + err.message);
+    } finally {
+      setBroadcastLoading(false);
+    }
   };
 
   const handleSaveSettings = async () => {
@@ -66,15 +88,48 @@ export default function AdminMetrics({ token }) {
       });
       const data = await res.json();
       setSettingsResult(data.message || data.error);
-    } catch (err) { setSettingsResult('Erro ao salvar.'); }
+      if (res.ok) fetchData();
+    } catch (err) { setSettingsResult('Erro ao salvar: ' + err.message); }
     finally { setSettingsLoading(false); }
   };
 
-  const handleBackup = () => {
-    window.open(`/api/admin/backup?token=${token}`, '_blank');
+  const handleBackup = async () => {
+    try {
+      const res = await fetch('/api/admin/backup', { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) { alert('Erro ao gerar backup: ' + res.status); return; }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `epi-backup-${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err) {
+      alert('Erro ao baixar backup: ' + err.message);
+    }
   };
 
-  if (loading) return <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}><RefreshCw size={24} className="animate-spin" style={{ margin: '0 auto', display: 'block' }} /> Cargando métricas...</div>;
+  if (loading) return (
+    <div className="glass-card" style={{ padding: '2rem', textAlign: 'center' }}>
+      <RefreshCw size={28} className="animate-spin" style={{ color: '#818cf8', margin: '0 auto', display: 'block', marginBottom: '0.75rem' }} />
+      <p style={{ color: '#e2e8f0', fontWeight: 600 }}>Carregando métricas...</p>
+    </div>
+  );
+
+  if (error) return (
+    <div className="glass-card" style={{ padding: '1.5rem', borderLeft: '4px solid #f43f5e' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+        <AlertTriangle size={20} style={{ color: '#f43f5e' }} />
+        <h4 style={{ color: '#f43f5e', fontWeight: 700 }}>Erro ao carregar métricas</h4>
+      </div>
+      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>{error}</p>
+      <button className="nav-btn nav-btn-primary" onClick={fetchData} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+        <RefreshCw size={16} /> Tentar Novamente
+      </button>
+    </div>
+  );
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: <TrendingUp size={16} /> },
@@ -119,7 +174,7 @@ export default function AdminMetrics({ token }) {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <div className="glass-card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ color: '#fff', fontSize: '0.95rem', marginBottom: '1rem', fontWeight: 700 }}>📈 Crescimento Mensal</h3>
+              <h3 style={{ color: '#fff', fontSize: '0.95rem', marginBottom: '1rem', fontWeight: 700 }}>Crescimento Mensal</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={metrics.monthlyGrowth}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -133,7 +188,7 @@ export default function AdminMetrics({ token }) {
             </div>
 
             <div className="glass-card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ color: '#fff', fontSize: '0.95rem', marginBottom: '1rem', fontWeight: 700 }}>🎯 Distribuição por Ciclo</h3>
+              <h3 style={{ color: '#fff', fontSize: '0.95rem', marginBottom: '1rem', fontWeight: 700 }}>Distribuição por Ciclo</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie data={metrics.cycleDistribution} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, count }) => `${name}: ${count}`}>
@@ -148,10 +203,19 @@ export default function AdminMetrics({ token }) {
         </>
       )}
 
+      {activeTab === 'dashboard' && !metrics && !loading && (
+        <div className="glass-card" style={{ padding: '2rem', textAlign: 'center' }}>
+          <p style={{ color: 'var(--text-muted)' }}>Nenhum dado de métricas disponível.</p>
+          <button className="nav-btn nav-btn-primary" onClick={fetchData} style={{ marginTop: '1rem', cursor: 'pointer' }}>
+            <RefreshCw size={16} /> Recarregar
+          </button>
+        </div>
+      )}
+
       {/* COMISSÕES */}
       {activeTab === 'commissions' && (
         <div className="glass-card" style={{ padding: '1.5rem' }}>
-          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem', fontWeight: 700 }}>💰 Relatório de Comissões por Afiliado</h3>
+          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem', fontWeight: 700 }}>Relatório de Comissões por Afiliado</h3>
           {commissions.length === 0 ? (
             <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>Nenhum dado de comissões disponível.</p>
           ) : (
@@ -180,8 +244,13 @@ export default function AdminMetrics({ token }) {
       {/* BROADCAST */}
       {activeTab === 'broadcast' && (
         <div className="glass-card" style={{ padding: '1.5rem', maxWidth: 600 }}>
-          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem', fontWeight: 700 }}>📧 Envio de Email em Massa</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>Envia um comunicado para todos os afiliados activos.</p>
+          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '0.5rem', fontWeight: 700 }}>Envio de Email em Massa</h3>
+          <div style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', borderRadius: 8, padding: '0.75rem 1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <AlertTriangle size={16} style={{ color: '#fbbf24', flexShrink: 0 }} />
+            <span style={{ color: '#fbbf24', fontSize: '0.82rem' }}>
+              Requer SMTP configurado no <code>.env</code> (SMTP_USER, SMTP_PASS). Se não estiver configurado, os emails não serão enviados.
+            </span>
+          </div>
           {broadcastResult && (
             <div className="sponsor-badge sponsor-badge-valid" style={{ marginBottom: '1rem' }}><CheckCircle2 size={16} /><span>{broadcastResult}</span></div>
           )}
@@ -204,7 +273,7 @@ export default function AdminMetrics({ token }) {
       {/* CONFIGURAÇÕES */}
       {activeTab === 'settings' && (
         <div className="glass-card" style={{ padding: '1.5rem' }}>
-          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem', fontWeight: 700 }}>⚙️ Configurações dos Ciclos</h3>
+          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem', fontWeight: 700 }}>Configurações dos Ciclos</h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>Altere preços, bônus e reembolsos de todos os ciclos.</p>
           {settingsResult && (
             <div className="sponsor-badge sponsor-badge-valid" style={{ marginBottom: '1rem' }}><CheckCircle2 size={16} /><span>{settingsResult}</span></div>
@@ -242,7 +311,7 @@ export default function AdminMetrics({ token }) {
       {/* BACKUP */}
       {activeTab === 'backup' && (
         <div className="glass-card" style={{ padding: '1.5rem', maxWidth: 500 }}>
-          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem', fontWeight: 700 }}>💾 Backup / Exportação de Dados</h3>
+          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem', fontWeight: 700 }}>Backup / Exportação de Dados</h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
             Exporta todos os dados do banco em formato JSON. Inclui: usuários, transações, saques, ciclos, cursos, produtos, envios e carteiras.
           </p>

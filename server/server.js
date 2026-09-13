@@ -1261,19 +1261,28 @@ app.post('/api/admin/expire-accounts', [authenticateToken, requireAdmin], async 
 // ----------------------------------------------------
 app.get('/api/admin/metrics', [authenticateToken, requireAdmin], async (req, res) => {
   try {
-    const { data: allUsers } = await supabase.from('users').select('id, created_at, role, is_active, account_status, registration_fee, fee_refunded');
-    const { data: allTransactions } = await supabase.from('transactions').select('id, type, amount, created_at, status');
-    const { data: allWithdrawals } = await supabase.from('withdrawals').select('id, amount, status, created_at');
-    const { data: allCycles } = await supabase.from('user_cycles').select('id, cycle_id, created_at');
-    const { data: allCourses } = await supabase.from('courses').select('id');
+    const { data: allUsers, error: errU } = await supabase.from('users').select('id, created_at, role, is_active, account_status, registration_fee, fee_refunded');
+    if (errU) console.error('[Metrics] users error:', errU.message);
+
+    const { data: allTransactions, error: errT } = await supabase.from('transactions').select('id, type, amount, created_at, status');
+    if (errT) console.error('[Metrics] transactions error:', errT.message);
+
+    const { data: allWithdrawals, error: errW } = await supabase.from('withdrawals').select('id, amount, status, created_at');
+    if (errW) console.error('[Metrics] withdrawals error:', errW.message);
+
+    const { data: allUserCycles, error: errUC } = await supabase.from('user_cycles').select('id, cycle_id, created_at');
+    if (errUC) console.error('[Metrics] user_cycles error:', errUC.message);
+
+    const { data: allCourses, error: errC } = await supabase.from('courses').select('id');
+    if (errC) console.error('[Metrics] courses error:', errC.message);
 
     const users = allUsers || [];
     const txs = allTransactions || [];
     const withdrawals = allWithdrawals || [];
-    const userCycles = allCycles || [];
+    const userCycles = allUserCycles || [];
 
     const totalUsers = users.filter(u => u.role === 'user').length;
-    const activeUsers = users.filter(u => u.is_active && u.role === 'user').length;
+    const activeUsers = users.filter(u => u.is_active !== false && u.role === 'user').length;
     const pendingUsers = users.filter(u => u.account_status === 'pending').length;
     const refundedUsers = users.filter(u => u.fee_refunded).length;
 
@@ -1294,12 +1303,15 @@ app.get('/api/admin/metrics', [authenticateToken, requireAdmin], async (req, res
       monthlyGrowth.push({ month: label, newUsers, revenue: Math.round(revenue), cyclesCompleted });
     }
 
-    const cycles = await getAllCycles();
+    let cycles = [];
+    try { cycles = await getAllCycles(); } catch (e) { console.error('[Metrics] getAllCycles error:', e.message); }
     const cycleDistribution = cycles.map(c => ({
       name: c.display_name,
       count: userCycles.filter(uc => uc.cycle_id === c.id).length,
       price: c.price
     }));
+
+    console.log('[Metrics] OK - users:', users.length, 'txs:', txs.length, 'withdrawals:', withdrawals.length);
 
     res.json({
       overview: { totalUsers, activeUsers, pendingUsers, refundedUsers, totalCourses: (allCourses || []).length },
@@ -1309,7 +1321,7 @@ app.get('/api/admin/metrics', [authenticateToken, requireAdmin], async (req, res
     });
   } catch (error) {
     console.error('Erro ao carregar métricas:', error);
-    res.status(500).json({ error: 'Erro ao carregar métricas.' });
+    res.status(500).json({ error: 'Erro ao carregar métricas: ' + error.message });
   }
 });
 
@@ -1343,20 +1355,27 @@ app.post('/api/admin/broadcast', [authenticateToken, requireAdmin], async (req, 
     const { subject, message } = req.body;
     if (!subject || !message) return res.status(400).json({ error: 'Assunto e mensagem são obrigatórios.' });
 
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      return res.status(400).json({ error: 'SMTP não configurado no servidor. Configure SMTP_USER e SMTP_PASS no .env para enviar emails.' });
+    }
+
     const { data: users } = await supabase.from('users').select('email, name').eq('is_active', true).eq('role', 'user');
     if (!users || users.length === 0) return res.json({ message: 'Nenhum usuário ativo encontrado.', sent: 0 });
 
     const { sendEmail } = require('./email');
     let sent = 0;
+    let failed = 0;
     for (const user of users) {
       const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:25px;border-radius:12px 12px 0 0;text-align:center;"><h1 style="color:white;margin:0;font-size:20px;">📢 Comunicado Epi Matriz 3x3</h1></div><div style="background:#1e1e2e;padding:25px;border-radius:0 0 12px 12px;color:#e2e8f0;"><p>Olá <strong>${user.name}</strong>,</p><div style="background:rgba(255,255,255,0.05);padding:15px;border-radius:8px;margin:15px 0;white-space:pre-wrap;">${message}</div><hr style="border-color:rgba(255,255,255,0.1);margin:20px 0;"><p style="font-size:12px;color:#94a3b8;">Epi Matriz 3x3 — Comunicado da Administração</p></div></div>`;
-      const ok = await sendEmail(user.email, subject, html).catch(() => false);
-      if (ok) sent++;
+      try {
+        const ok = await sendEmail(user.email, subject, html);
+        if (ok) sent++; else failed++;
+      } catch (e) { failed++; }
     }
-    res.json({ message: `Email enviado para ${sent} de ${users.length} afiliados.`, sent, total: users.length });
+    res.json({ message: `Email enviado para ${sent} de ${users.length} afiliados${failed > 0 ? ` (${failed} falharam)` : ''}.`, sent, total: users.length, failed });
   } catch (error) {
     console.error('Erro no broadcast:', error);
-    res.status(500).json({ error: 'Erro ao enviar emails.' });
+    res.status(500).json({ error: 'Erro ao enviar emails: ' + error.message });
   }
 });
 
