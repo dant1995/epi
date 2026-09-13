@@ -1,15 +1,14 @@
-FROM node:22
-
-RUN apt-get update && apt-get install -y build-essential python3 && rm -rf /var/lib/apt/lists/*
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm install
+COPY package*.json ./
+RUN npm ci --omit=dev
 
-COPY . .
-RUN npm run build
+COPY server/ ./server/
+COPY dist/ ./dist/
+COPY .env* ./
 
-EXPOSE 3000
+EXPOSE 3001
 
 CMD ["node", "server/server.js"]
