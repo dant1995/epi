@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Download, Search, Users, UserCheck, Layers, RefreshCw, DollarSign, Award, UserPlus, CheckCircle2, AlertCircle, ChevronUp, ChevronDown, Key, ShieldCheck, Lock, X, Wallet, Power, Send, Clock, BookOpen, Plus, Trash2, Edit, Video, Eye, EyeOff, PlayCircle, ChevronLeft, ChevronRight, Package } from 'lucide-react';
+import { Shield, Download, Search, Users, UserCheck, Layers, RefreshCw, DollarSign, Award, UserPlus, CheckCircle2, AlertCircle, ChevronUp, ChevronDown, Key, ShieldCheck, Lock, X, Wallet, Power, Send, Clock, BookOpen, Plus, Trash2, Edit, Video, Eye, EyeOff, PlayCircle, ChevronLeft, ChevronRight, Package, BarChart3 } from 'lucide-react';
+import AdminMetrics from './AdminMetrics';
 
 export default function AdminDashboard({ token }) {
   const [users, setUsers] = useState([]);
@@ -51,6 +52,8 @@ export default function AdminDashboard({ token }) {
   const [showQuizModal, setShowQuizModal] = useState(false);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [quizForm, setQuizForm] = useState({ module_id: null, title: '', passing_score: 70 });
+
+  const [showMetrics, setShowMetrics] = useState(false);
   const [questionForm, setQuestionForm] = useState({ quiz_id: null, question_text: '', correct_option_index: 0, options: ['', '', '', ''] });
   const [lessonForm, setLessonForm] = useState({ module_id: null, title: '', description: '', video_url: '', duration: '10:00', order_index: 1 });
 
@@ -678,7 +681,19 @@ export default function AdminDashboard({ token }) {
         </div>
       )}
 
-      {/* MÉTRICAS GLOBALES */}
+      {/* PAINEL DE MÉTRICAS AVANÇADAS */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <button 
+          className="nav-btn nav-btn-ghost" 
+          onClick={() => setShowMetrics(!showMetrics)} 
+          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: showMetrics ? '1rem' : 0 }}
+        >
+          <BarChart3 size={18} /> {showMetrics ? 'Ocultar Métricas Avançadas' : 'Ver Métricas Avançadas'}
+        </button>
+        {showMetrics && <AdminMetrics token={token} />}
+      </div>
+
+      {/* MÉTRICAS GLOBAIS */}
       <div className="stats-grid">
         <div className="stat-card stat-card-indigo">
           <div className="stat-header">

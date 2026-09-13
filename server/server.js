@@ -1257,6 +1257,179 @@ app.post('/api/admin/expire-accounts', [authenticateToken, requireAdmin], async 
 });
 
 // ----------------------------------------------------
+// ADMIN: DASHBOARD COM MÉTRICAS
+// ----------------------------------------------------
+app.get('/api/admin/metrics', [authenticateToken, requireAdmin], async (req, res) => {
+  try {
+    const { data: allUsers } = await supabase.from('users').select('id, created_at, role, is_active, account_status, registration_fee, fee_refunded');
+    const { data: allTransactions } = await supabase.from('transactions').select('id, type, amount, created_at, status');
+    const { data: allWithdrawals } = await supabase.from('withdrawals').select('id, amount, status, created_at');
+    const { data: allCycles } = await supabase.from('user_cycles').select('id, cycle_id, created_at');
+    const { data: allCourses } = await supabase.from('courses').select('id');
+
+    const users = allUsers || [];
+    const txs = allTransactions || [];
+    const withdrawals = allWithdrawals || [];
+    const userCycles = allCycles || [];
+
+    const totalUsers = users.filter(u => u.role === 'user').length;
+    const activeUsers = users.filter(u => u.is_active && u.role === 'user').length;
+    const pendingUsers = users.filter(u => u.account_status === 'pending').length;
+    const refundedUsers = users.filter(u => u.fee_refunded).length;
+
+    const totalRevenue = txs.filter(t => t.type === 'cycle_purchase' && t.status === 'completed').reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+    const totalCommissions = txs.filter(t => t.type === 'direct_commission' && t.status === 'completed').reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+    const totalRefunds = txs.filter(t => t.type === 'refund' && t.status === 'completed').reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+    const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending').reduce((s, w) => s + parseFloat(w.amount || 0), 0);
+
+    const now = new Date();
+    const monthlyGrowth = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const nextMonth = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      const label = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      const newUsers = users.filter(u => { const cd = new Date(u.created_at); return cd >= d && cd < nextMonth && u.role === 'user'; }).length;
+      const revenue = txs.filter(t => { const cd = new Date(t.created_at); return cd >= d && cd < nextMonth && t.type === 'cycle_purchase' && t.status === 'completed'; }).reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+      const cyclesCompleted = userCycles.filter(uc => { const cd = new Date(uc.created_at); return cd >= d && cd < nextMonth; }).length;
+      monthlyGrowth.push({ month: label, newUsers, revenue: Math.round(revenue), cyclesCompleted });
+    }
+
+    const cycles = await getAllCycles();
+    const cycleDistribution = cycles.map(c => ({
+      name: c.display_name,
+      count: userCycles.filter(uc => uc.cycle_id === c.id).length,
+      price: c.price
+    }));
+
+    res.json({
+      overview: { totalUsers, activeUsers, pendingUsers, refundedUsers, totalCourses: (allCourses || []).length },
+      financial: { totalRevenue, totalCommissions, totalRefunds, pendingWithdrawals },
+      monthlyGrowth,
+      cycleDistribution
+    });
+  } catch (error) {
+    console.error('Erro ao carregar métricas:', error);
+    res.status(500).json({ error: 'Erro ao carregar métricas.' });
+  }
+});
+
+// ----------------------------------------------------
+// ADMIN: RELATÓRIO DE COMISSÕES
+// ----------------------------------------------------
+app.get('/api/admin/commissions', [authenticateToken, requireAdmin], async (req, res) => {
+  try {
+    const { data: users } = await supabase.from('users').select('id, name, email, referral_code, sponsor_id').eq('role', 'user');
+    const { data: txs } = await supabase.from('transactions').select('id, user_id, to_user_id, type, amount, created_at, description, status').in('type', ['direct_commission', 'refund']);
+
+    const commissionReport = (users || []).map(u => {
+      const earned = (txs || []).filter(t => t.to_user_id === u.id && t.status === 'completed')
+        .reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+      const referralCount = (users || []).filter(us => us.sponsor_id === u.id).length;
+      return { id: u.id, name: u.name, email: u.email, referral_code: u.referral_code, referralCount, totalEarned: Math.round(earned * 100) / 100 };
+    }).sort((a, b) => b.totalEarned - a.totalEarned);
+
+    res.json({ commissions: commissionReport });
+  } catch (error) {
+    console.error('Erro ao gerar relatório de comissões:', error);
+    res.status(500).json({ error: 'Erro ao gerar relatório.' });
+  }
+});
+
+// ----------------------------------------------------
+// ADMIN: ENVIO EM MASSA
+// ----------------------------------------------------
+app.post('/api/admin/broadcast', [authenticateToken, requireAdmin], async (req, res) => {
+  try {
+    const { subject, message } = req.body;
+    if (!subject || !message) return res.status(400).json({ error: 'Assunto e mensagem são obrigatórios.' });
+
+    const { data: users } = await supabase.from('users').select('email, name').eq('is_active', true).eq('role', 'user');
+    if (!users || users.length === 0) return res.json({ message: 'Nenhum usuário ativo encontrado.', sent: 0 });
+
+    const { sendEmail } = require('./email');
+    let sent = 0;
+    for (const user of users) {
+      const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:25px;border-radius:12px 12px 0 0;text-align:center;"><h1 style="color:white;margin:0;font-size:20px;">📢 Comunicado Epi Matriz 3x3</h1></div><div style="background:#1e1e2e;padding:25px;border-radius:0 0 12px 12px;color:#e2e8f0;"><p>Olá <strong>${user.name}</strong>,</p><div style="background:rgba(255,255,255,0.05);padding:15px;border-radius:8px;margin:15px 0;white-space:pre-wrap;">${message}</div><hr style="border-color:rgba(255,255,255,0.1);margin:20px 0;"><p style="font-size:12px;color:#94a3b8;">Epi Matriz 3x3 — Comunicado da Administração</p></div></div>`;
+      const ok = await sendEmail(user.email, subject, html).catch(() => false);
+      if (ok) sent++;
+    }
+    res.json({ message: `Email enviado para ${sent} de ${users.length} afiliados.`, sent, total: users.length });
+  } catch (error) {
+    console.error('Erro no broadcast:', error);
+    res.status(500).json({ error: 'Erro ao enviar emails.' });
+  }
+});
+
+// ----------------------------------------------------
+// ADMIN: CONFIGURAÇÕES GLOBAIS (CICLOS)
+// ----------------------------------------------------
+app.put('/api/admin/cycles/bulk', [authenticateToken, requireAdmin], async (req, res) => {
+  try {
+    const { cycles } = req.body;
+    if (!Array.isArray(cycles)) return res.status(400).json({ error: 'Formato inválido.' });
+
+    for (const c of cycles) {
+      if (!c.id) continue;
+      const updates = {};
+      if (c.name !== undefined) updates.name = c.name;
+      if (c.display_name !== undefined) updates.display_name = c.display_name;
+      if (c.price !== undefined) updates.price = c.price;
+      if (c.bonus_per_referral !== undefined) updates.bonus_per_referral = c.bonus_per_referral;
+      if (c.refund_amount !== undefined) updates.refund_amount = c.refund_amount;
+      if (c.description !== undefined) updates.description = c.description;
+      if (Object.keys(updates).length > 0) {
+        await supabase.from('cycles').update(updates).eq('id', c.id);
+      }
+    }
+    res.json({ message: 'Configurações atualizadas com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao atualizar configurações:', error);
+    res.status(500).json({ error: 'Erro ao atualizar configurações.' });
+  }
+});
+
+// ----------------------------------------------------
+// ADMIN: BACKUP / EXPORTAÇÃO
+// ----------------------------------------------------
+app.get('/api/admin/backup', [authenticateToken, requireAdmin], async (req, res) => {
+  try {
+    const [users, transactions, withdrawals, cycles, userCycles, courses, products, shipments, wallets] = await Promise.all([
+      supabase.from('users').select('*'),
+      supabase.from('transactions').select('*'),
+      supabase.from('withdrawals').select('*'),
+      supabase.from('cycles').select('*'),
+      supabase.from('user_cycles').select('*'),
+      supabase.from('courses').select('*'),
+      supabase.from('products').select('*'),
+      supabase.from('shipments').select('*'),
+      supabase.from('wallets').select('*')
+    ]);
+
+    const backup = {
+      exported_at: new Date().toISOString(),
+      tables: {
+        users: users.data || [],
+        transactions: transactions.data || [],
+        withdrawals: withdrawals.data || [],
+        cycles: cycles.data || [],
+        user_cycles: userCycles.data || [],
+        courses: courses.data || [],
+        products: products.data || [],
+        shipments: shipments.data || [],
+        wallets: wallets.data || []
+      }
+    };
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="epi-backup-${new Date().toISOString().slice(0,10)}.json"`);
+    res.json(backup);
+  } catch (error) {
+    console.error('Erro ao gerar backup:', error);
+    res.status(500).json({ error: 'Erro ao gerar backup.' });
+  }
+});
+
+// ----------------------------------------------------
 // GESTIÓN DE PRODUCTOS FÍSICOS (CRUD Admin)
 // ----------------------------------------------------
 
