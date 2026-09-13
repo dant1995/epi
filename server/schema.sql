@@ -19,6 +19,14 @@ CREATE TABLE IF NOT EXISTS public.users (
     is_active BOOLEAN DEFAULT TRUE,
     current_cycle VARCHAR(50) DEFAULT 'Bronze',
     current_cycle_id INT DEFAULT 1,
+    phone VARCHAR(50),
+    date_of_birth DATE,
+    country VARCHAR(100),
+    document_photo_url TEXT,
+    profile_completed BOOLEAN DEFAULT FALSE,
+    shipping_address TEXT,
+    account_status VARCHAR(20) DEFAULT 'active',
+    last_active_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -29,6 +37,12 @@ ALTER TABLE public.users ADD COLUMN IF NOT EXISTS fee_refunded BOOLEAN DEFAULT F
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS current_cycle VARCHAR(50) DEFAULT 'Bronze';
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS current_cycle_id INT DEFAULT 1;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS date_of_birth DATE;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS country VARCHAR(100);
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS document_photo_url TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_completed BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS shipping_address TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_users_sponsor_id ON public.users(sponsor_id);
 CREATE INDEX IF NOT EXISTS idx_users_placement_id ON public.users(placement_id);
@@ -117,6 +131,7 @@ CREATE TABLE IF NOT EXISTS public.shipments (
     product_id INT REFERENCES public.products(id),
     status VARCHAR(20) DEFAULT 'pending',
     tracking_code VARCHAR(100),
+    shipping_address TEXT,
     shipped_at TIMESTAMP WITH TIME ZONE,
     delivered_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -198,6 +213,22 @@ CREATE TABLE IF NOT EXISTS public.quiz_attempts (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 17. Tabela de Logs de Auditoria (Ações Admin)
+CREATE TABLE IF NOT EXISTS public.audit_logs (
+    id SERIAL PRIMARY KEY,
+    admin_user_id INT REFERENCES public.users(id) ON DELETE SET NULL,
+    admin_name VARCHAR(255),
+    action VARCHAR(100) NOT NULL,
+    target_user_id INT REFERENCES public.users(id) ON DELETE SET NULL,
+    target_user_name VARCHAR(255),
+    details TEXT,
+    ip_address VARCHAR(45),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_admin_user_id ON public.audit_logs(admin_user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON public.audit_logs(created_at DESC);
+
 -- ==========================================================
 -- DESABILITAR RLS PARA ACESSO DIRETO DA API NODE
 -- ==========================================================
@@ -217,6 +248,7 @@ ALTER TABLE public.quizzes DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.questions DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.quiz_options DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.quiz_attempts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.audit_logs DISABLE ROW LEVEL SECURITY;
 
 -- ==========================================================
 -- DADOS INICIAIS: 5 CICLOS PROGRESSIVOS

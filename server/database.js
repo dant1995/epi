@@ -1,11 +1,16 @@
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcryptjs');
 
 // -----------------------------------------------
 // CONFIGURAÇÃO DO SUPABASE
 // -----------------------------------------------
-const SUPABASE_URL = 'https://chjqjxlkiqiuuwunyrup.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoanFqeGxraXFpdXV3dW55cnVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMDE2MTEsImV4cCI6MjEwMzc3NzYxMX0.bEul-DJ-3KDuFn0Hn8BLFHo6YI52d-p_mYTv80aorfY';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://chjqjxlkiqiuuwunyrup.supabase.co';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoanFqeGxraXFpdXV3dW55cnVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyMDE2MTEsImV4cCI6MjEwMzc3NzYxMX0.bEul-DJ-3KDuFn0Hn8BLFHo6YI52d-p_mYTv80aorfY';
+
+if (!process.env.SUPABASE_ANON_KEY) {
+  console.warn('⚠️  SUPABASE_ANON_KEY não definida. Usando valor embutido (mude para variável de ambiente em produção).');
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -149,7 +154,7 @@ async function nextFreePosition(parentId) {
 }
 
 // -----------------------------------------------
-// ALGORITMO BFS COM POSIÇÃO EXATA
+// ALGORITMO BFS COM POSIÇÃO EXATA (OTIMIZADO)
 // Retorna { placementId, position }
 // -----------------------------------------------
 async function findAvailablePlacementNode(rootSponsorId, targetLeg = 'auto') {
@@ -170,23 +175,40 @@ async function findAvailablePlacementNode(rootSponsorId, targetLeg = 'auto') {
     }
   }
 
-  // ------ Auto (BFS da esquerda para direita) ------
-  const queue = [rootSponsorId];
+  // ------ Auto (BFS otimizado com batch query) ------
+  let currentLevel = [rootSponsorId];
 
-  while (queue.length > 0) {
-    const currentId = queue.shift();
-    const children = await countChildren(currentId);
-    const occupied = children.map(c => c.position);
+  while (currentLevel.length > 0) {
+    // Buscar TODOS os filhos do nível atual em UMA única query
+    const { data: allChildren } = await supabase
+      .from('users')
+      .select('id, placement_id, position')
+      .in('placement_id', currentLevel)
+      .order('position', { ascending: true });
 
-    for (let pos = 1; pos <= 3; pos++) {
-      if (!occupied.includes(pos)) {
-        return { placementId: currentId, position: pos };
+    // Indexar filhos por pai
+    const childrenByParent = {};
+    (allChildren || []).forEach(child => {
+      if (!childrenByParent[child.placement_id]) {
+        childrenByParent[child.placement_id] = [];
+      }
+      childrenByParent[child.placement_id].push(child);
+    });
+
+    // Verificar cada pai do nível atual
+    for (const parentId of currentLevel) {
+      const children = childrenByParent[parentId] || [];
+      const occupied = children.map(c => c.position);
+
+      for (let pos = 1; pos <= 3; pos++) {
+        if (!occupied.includes(pos)) {
+          return { placementId: parentId, position: pos };
+        }
       }
     }
-    // Todas 3 posições preenchidas → adicionar filhos à fila
-    children
-      .sort((a, b) => a.position - b.position)
-      .forEach(c => queue.push(c.id));
+
+    // Todas as posições do nível atual ocupadas → descer para o próximo nível
+    currentLevel = (allChildren || []).map(c => c.id);
   }
 
   return { placementId: rootSponsorId, position: 1 };
@@ -242,7 +264,7 @@ async function findUserByEmail(email) {
 // CRIAR USUÁRIO NA MATRIZ Epi (SUPABASE)
 // Grava placement_id E position no Supabase
 // -----------------------------------------------
-async function createUserLspc({ name, email, passwordHash, referralCode, sponsorId, targetLeg = 'auto' }) {
+async function createUserLspc({ name, email, passwordHash, referralCode, sponsorId, targetLeg = 'auto', phone, accountStatus = 'pending' }) {
   const { placementId, position } = await findAvailablePlacementNode(sponsorId, targetLeg);
 
   const legLabel = position === 1 ? 'Esquerda (Pos.1)' : position === 2 ? 'Centro (Pos.2)' : 'Direita (Pos.3)';
@@ -266,7 +288,9 @@ async function createUserLspc({ name, email, passwordHash, referralCode, sponsor
       fee_refunded: false,
       current_cycle: bronzeCycle?.name || 'Bronze',
       current_cycle_id: 1,
-      role: 'user'
+      role: 'user',
+      phone: phone || null,
+      account_status: accountStatus
     }])
     .select()
     .single();
@@ -416,14 +440,14 @@ async function getAllUsersWithLspcStats() {
   let users = null;
   let { data, error } = await supabase
     .from('users')
-    .select('id, name, email, referral_code, role, is_active, sponsor_id, placement_id, position, registration_fee, fee_refunded, current_cycle, created_at')
+    .select('id, name, email, phone, referral_code, role, is_active, sponsor_id, placement_id, position, registration_fee, fee_refunded, current_cycle, created_at')
     .order('id', { ascending: true });
 
   if (error) {
     // Tentar busca sem is_active caso a coluna ainda não exista na tabela do Supabase
     const fallback = await supabase
       .from('users')
-      .select('id, name, email, referral_code, role, sponsor_id, placement_id, position, registration_fee, fee_refunded, current_cycle, created_at')
+      .select('id, name, email, phone, referral_code, role, sponsor_id, placement_id, position, registration_fee, fee_refunded, current_cycle, created_at')
       .order('id', { ascending: true });
     
     if (fallback.error) throw new Error(`Erro ao listar usuários: ${fallback.error.message}`);
@@ -982,16 +1006,23 @@ async function processHotmartPurchase({ buyerEmail, buyerName, productId }) {
     [process.env.HOTMART_PRODUCT_DIAMANTE || '']: 5,
   };
 
+  const registrationProductId = process.env.HOTMART_PRODUCT_REGISTRATION || '';
+
   const cycleId = cyclesByProduct[String(productId)];
-  if (!cycleId) {
+  const isRegistration = String(productId) === String(registrationProductId);
+  
+  if (!cycleId && !isRegistration) {
     console.warn(`⚠️ [Hotmart] Product ID ${productId} não mapeado para nenhum ciclo.`);
     return { success: false, reason: 'product_not_mapped' };
   }
 
-  const cycle = await getCycleById(cycleId);
-  if (!cycle) {
-    console.error(`❌ [Hotmart] Ciclo ID ${cycleId} não encontrado no banco.`);
-    return { success: false, reason: 'cycle_not_found' };
+  let cycle = null;
+  if (cycleId) {
+    cycle = await getCycleById(cycleId);
+    if (!cycle) {
+      console.error(`❌ [Hotmart] Ciclo ID ${cycleId} não encontrado no banco.`);
+      return { success: false, reason: 'cycle_not_found' };
+    }
   }
 
   // 1. Buscar usuário existente
@@ -1031,6 +1062,20 @@ async function processHotmartPurchase({ buyerEmail, buyerName, productId }) {
     console.log(`✅ [Hotmart] Usuário criado: ID ${user.id}, email: ${buyerEmail}`);
   }
 
+  // 2.1. Se é pagamento de REGISTRO → ativar conta
+  if (isRegistration) {
+    if (user.account_status === 'active') {
+      console.log(`ℹ️ [Hotmart] Usuário ${buyerEmail} já está ativo. Ignorando.`);
+      return { success: true, already_active: true, type: 'registration' };
+    }
+    await supabase
+      .from('users')
+      .update({ account_status: 'active', is_active: true })
+      .eq('id', user.id);
+    console.log(`✅ [Hotmart] Conta ativada: ${buyerEmail} — Pagamento de registro confirmado`);
+    return { success: true, type: 'registration_activated', user_id: user.id };
+  }
+
   // 3. Verificar se já possui este ciclo
   const { data: existingCycle } = await supabase
     .from('user_cycles')
@@ -1064,7 +1109,8 @@ async function processHotmartPurchase({ buyerEmail, buyerName, productId }) {
         user_id: user.id,
         cycle_id: cycleId,
         product_id: product.id,
-        status: 'pending'
+        status: 'pending',
+        shipping_address: user.shipping_address || null
       }]);
       console.log(`📦 [Hotmart] Envio criado para ${buyerEmail} — Ciclo ${cycle.name}`);
     } else {
@@ -1138,6 +1184,70 @@ async function seedCoursesDatabase() {
 // Chamar seed de cursos na inicialização
 seedCoursesDatabase();
 
+// ============================================================
+// SISTEMA DE LOGS DE AUDITORIA
+// ============================================================
+async function createAuditLog({ adminUserId, adminName, action, targetUserId, targetUserName, details, ipAddress }) {
+  try {
+    await supabase.from('audit_logs').insert([{
+      admin_user_id: adminUserId,
+      admin_name: adminName,
+      action,
+      target_user_id: targetUserId || null,
+      target_user_name: targetUserName || null,
+      details: details || null,
+      ip_address: ipAddress || null
+    }]);
+  } catch (err) {
+    console.error('Erro ao registrar log de auditoria:', err.message);
+  }
+}
+
+async function getAuditLogs(limit = 50) {
+  const { data, error } = await supabase
+    .from('audit_logs')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data;
+}
+
+// EXPIRAÇÃO DE CONTAS INATIVAS
+async function deactivateInactiveAccounts(inactiveDays = 90) {
+  try {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - inactiveDays);
+
+    const { data: inactiveUsers, error } = await supabase
+      .from('users')
+      .select('id, name, email')
+      .eq('role', 'user')
+      .eq('is_active', true)
+      .eq('account_status', 'active')
+      .lt('last_active_at', cutoffDate.toISOString());
+
+    if (error) throw new Error(error.message);
+    if (!inactiveUsers || inactiveUsers.length === 0) {
+      console.log(`[Expiration] Nenhum usuário inativo há ${inactiveDays}+ dias.`);
+      return { deactivated: 0 };
+    }
+
+    const userIds = inactiveUsers.map(u => u.id);
+    await supabase
+      .from('users')
+      .update({ is_active: false, account_status: 'expired' })
+      .in('id', userIds);
+
+    console.log(`[Expiration] ${inactiveUsers.length} contas expiradas (${inactiveDays}+ dias)`);
+    return { deactivated: inactiveUsers.length, users: inactiveUsers.map(u => u.name) };
+  } catch (err) {
+    console.error('[Expiration] Erro ao expirar contas:', err.message);
+    return { deactivated: 0, error: err.message };
+  }
+}
+
 module.exports = {
   initDb,
   findUserByIdentifier,
@@ -1194,6 +1304,9 @@ module.exports = {
   seedCycles,
   creditWallet,
   processHotmartPurchase,
+  createAuditLog,
+  getAuditLogs,
+  deactivateInactiveAccounts,
   supabase
 };
 
@@ -1272,10 +1385,15 @@ async function getUserCycleProgress(userId) {
   }));
 }
 
-// 5. Verificar se usuário completou a matriz 3x3 num ciclo específico
+// 5. Verificar se usuário completou a matriz 3x3 (39 nós reais)
 async function checkMatrixCompletion(userId) {
-  const children = await countChildren(userId);
-  return children.length >= 3;
+  const matrix = await getLspcMatrix(userId);
+  const maestros = matrix.filter(m => m.layer === 1);
+  const lideres = matrix.filter(m => m.layer === 2);
+  const ayudantes = matrix.filter(m => m.layer === 3);
+
+  // Matriz completa: 3 Maestros + 9 Líderes + 27 Ajudantes = 39
+  return maestros.length >= 3 && lideres.length >= 9 && ayudantes.length >= 27;
 }
 
 // 6. Processar comissão por indicação direta
@@ -1480,7 +1598,8 @@ async function processUpgrade(userId, targetCycleId) {
         user_id: userId,
         cycle_id: targetCycleId,
         product_id: product.id,
-        status: 'pending'
+        status: 'pending',
+        shipping_address: user.shipping_address || null
       }]);
       console.log(`📦 Envio criado para ${user.name} — Ciclo ${targetCycle.name}`);
     }
@@ -1585,6 +1704,7 @@ async function getAllShipments() {
     product_sku: s.product?.sku || 'N/A',
     status: s.status,
     tracking_code: s.tracking_code,
+    shipping_address: s.shipping_address || '—',
     shipped_at: s.shipped_at,
     delivered_at: s.delivered_at,
     created_at: s.created_at
@@ -1671,6 +1791,7 @@ async function getUserDashboardData(userId) {
       current_cycle: currentUser.current_cycle || 'Bronze',
       current_cycle_id: currentUser.current_cycle_id || 1,
       is_active: currentUser.is_active,
+      shipping_address: currentUser.shipping_address || '',
       created_at: currentUser.created_at
     },
     current_cycle: currentCycle,

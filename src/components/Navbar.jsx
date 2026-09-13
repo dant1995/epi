@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Network, UserCheck, Shield, LogOut, Database, User, GraduationCap, Menu, X } from 'lucide-react';
 
-export default function Navbar({ currentUser, activeTab, setActiveTab, onLogout, onOpenSupabaseModal }) {
+export default function Navbar({ currentUser, activeTab, setActiveTab, onLogout, onOpenSupabaseModal, onOpenProfile }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleNav = (tab) => {
@@ -49,14 +49,12 @@ export default function Navbar({ currentUser, activeTab, setActiveTab, onLogout,
           )}
 
           <button
-            className="nav-btn nav-btn-outline"
-            onClick={() => { onOpenSupabaseModal(); setMobileOpen(false); }}
-            title="Ver instrucción y script de Base de Datos Supabase"
+            className="user-menu-badge"
+            onClick={() => { if (onOpenProfile) onOpenProfile(); setMobileOpen(false); }}
+            style={{ cursor: 'pointer', background: 'none', border: 'none', padding: '0.3rem 0.5rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'none'}
           >
-            <Database size={16} /> Supabase SQL
-          </button>
-
-          <div className="user-menu-badge">
             <div className="user-avatar">
               {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
             </div>
@@ -64,7 +62,7 @@ export default function Navbar({ currentUser, activeTab, setActiveTab, onLogout,
               <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{currentUser.name}</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{currentUser.referral_code}</div>
             </div>
-          </div>
+          </button>
 
           <button className="nav-btn nav-btn-ghost" onClick={() => { onLogout(); setMobileOpen(false); }} title="Salir del sistema">
             <LogOut size={16} /> Salir
@@ -83,12 +81,6 @@ export default function Navbar({ currentUser, activeTab, setActiveTab, onLogout,
             onClick={() => handleNav('register')}
           >
             Registrarse
-          </button>
-          <button
-            className="nav-btn nav-btn-outline"
-            onClick={() => { onOpenSupabaseModal(); setMobileOpen(false); }}
-          >
-            <Database size={16} /> SQL Supabase
           </button>
         </div>
       )}

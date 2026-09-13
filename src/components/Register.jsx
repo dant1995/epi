@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Lock, UserCheck, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { User, Mail, Lock, UserCheck, CheckCircle2, AlertCircle, Loader2, Phone } from 'lucide-react';
 
 export default function Register({ onRegisterSuccess, switchToLogin }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [sponsorIdentifier, setSponsorIdentifier] = useState('');
   
@@ -116,6 +117,7 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
         body: JSON.stringify({
           name,
           email,
+          phone,
           password,
           sponsorIdentifier: sponsorIdentifier.trim()
         })
@@ -133,7 +135,11 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
         throw new Error(data.error || 'Error al realizar el registro.');
       }
 
-      onRegisterSuccess(data.token, data.user);
+      onRegisterSuccess(data.token, {
+        ...data.user,
+        account_status: data.account_status,
+        payment: data.payment
+      });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -188,7 +194,22 @@ export default function Register({ onRegisterSuccess, switchToLogin }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Contraseña de Acceso</label>
+            <label className="form-label">Teléfono / WhatsApp</label>
+            <div className="input-wrapper">
+              <Phone className="input-icon" size={18} />
+              <input
+                type="tel"
+                className="form-input"
+                placeholder="Ej: +54 11 1234-5678"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Contraseña de Acceso (mín. 6 caracteres)</label>
             <div className="input-wrapper">
               <Lock className="input-icon" size={18} />
               <input

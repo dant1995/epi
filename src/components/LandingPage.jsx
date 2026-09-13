@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Crown, Shield, Award, Gem, Star, Zap, TrendingUp, 
   Users, ArrowRight, CheckCircle2, DollarSign, Package,
@@ -105,6 +105,14 @@ const HOTMART_LINKS = {
 };
 
 export default function LandingPage({ onNavigate }) {
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div style={{ minHeight: '100vh', overflow: 'hidden' }}>
 
@@ -150,18 +158,53 @@ export default function LandingPage({ onNavigate }) {
       </header>
 
       {/* ========== BANNER ========== */}
-      <div style={{ width: '100%', overflow: 'hidden' }}>
+      <div style={{ width: '100%', overflow: 'hidden', maxHeight: isDesktop ? '50vh' : '40vh' }}>
         <img
-          src="/benner.png"
+          src="/banner.png"
           alt="EPI - Elevation Prosperity International"
           style={{
             width: '100%',
-            height: 'auto',
-            display: 'block',
-            maxHeight: '350px',
-            objectFit: 'cover'
+            height: '100%',
+            maxHeight: isDesktop ? '50vh' : '40vh',
+            objectFit: 'cover',
+            objectPosition: 'center',
+            display: 'block'
           }}
         />
+      </div>
+
+      {/* ========== VIDEO ========== */}
+      <div style={{
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        padding: isDesktop ? '1.5rem 1rem' : '1rem 1rem',
+      }}>
+        <div style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: isDesktop ? '560px' : '100%',
+          aspectRatio: '16 / 9',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)',
+          border: '1px solid rgba(99,102,241,0.2)'
+        }}>
+          <iframe
+            src="https://www.youtube.com/embed/LEhbHKXZHtg"
+            title="Video explicativo"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              border: 'none'
+            }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
       </div>
 
       {/* ========== HERO ========== */}
@@ -229,43 +272,6 @@ export default function LandingPage({ onNavigate }) {
             >
               Como Funciona <ArrowRight size={18} />
             </a>
-          </div>
-
-          {/* Video */}
-          <div style={{
-            marginTop: '3rem',
-            display: 'flex',
-            justifyContent: 'center',
-            width: '100%',
-            maxWidth: '720px',
-            marginLeft: 'auto',
-            marginRight: 'auto'
-          }}>
-            <div style={{
-              position: 'relative',
-              paddingBottom: '56.25%',
-              height: 0,
-              width: '100%',
-              borderRadius: '16px',
-              overflow: 'hidden',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-              border: '1px solid rgba(99,102,241,0.2)'
-            }}>
-              <iframe
-                src="https://www.youtube.com/embed/LEhbHKXZHtg"
-                title="Video explicativo"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  border: 'none'
-                }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
           </div>
 
           {/* Stats */}
@@ -447,56 +453,20 @@ export default function LandingPage({ onNavigate }) {
           <div style={{
             marginTop: '3rem', background: 'rgba(18, 26, 43, 0.7)',
             border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px',
-            padding: '2rem', textAlign: 'center'
+            padding: '2rem', textAlign: 'center', overflow: 'hidden'
           }}>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginBottom: '1.5rem' }}>
               Estructura de la Matriz Forzada 3x3
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-              <div style={{
-                padding: '0.6rem 2rem', borderRadius: '12px',
-                background: 'linear-gradient(135deg, #6366f1, #4f46e5)', color: '#fff',
-                fontWeight: 700, fontSize: '0.95rem'
-              }}>
-                Tu (Raíz)
-              </div>
-              <div style={{ color: '#64748b', fontSize: '1.5rem' }}>|</div>
-              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                {['Maestro 1', 'Maestro 2', 'Maestro 3'].map((m, i) => (
-                  <div key={i} style={{
-                    padding: '0.5rem 1.5rem', borderRadius: '10px',
-                    background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)',
-                    color: '#34d399', fontWeight: 700, fontSize: '0.85rem'
-                  }}>
-                    {m}
-                  </div>
-                ))}
-              </div>
-              <div style={{ color: '#64748b', fontSize: '1.5rem' }}>|</div>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                {Array.from({ length: 9 }, (_, i) => (
-                  <div key={i} style={{
-                    padding: '0.4rem 0.8rem', borderRadius: '8px',
-                    background: 'rgba(6, 182, 212, 0.1)', border: '1px solid rgba(6, 182, 212, 0.2)',
-                    color: '#67e8f9', fontWeight: 600, fontSize: '0.75rem'
-                  }}>
-                    Líder {i + 1}
-                  </div>
-                ))}
-              </div>
-              <div style={{ color: '#64748b', fontSize: '1.5rem' }}>|</div>
-              <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '700px' }}>
-                {Array.from({ length: 27 }, (_, i) => (
-                  <div key={i} style={{
-                    padding: '0.25rem 0.5rem', borderRadius: '6px',
-                    background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.15)',
-                    color: '#fbbf24', fontWeight: 600, fontSize: '0.65rem'
-                  }}>
-                    Ayudante {i + 1}
-                  </div>
-                ))}
-              </div>
-            </div>
+            <img
+              src="/estructura.png"
+              alt="Estructura de la Matriz 3x3"
+              style={{
+                width: '100%',
+                height: 'auto',
+                borderRadius: '12px'
+              }}
+            />
             <p style={{ marginTop: '1.5rem', fontSize: '0.85rem', color: '#64748b' }}>
               3 + 9 + 27 = <strong style={{ color: '#fff' }}>39 posiciones</strong> por ciclo completado
             </p>

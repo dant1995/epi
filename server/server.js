@@ -1,9 +1,11 @@
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const path = require('path');
+const { sendWelcomeEmail, sendNewAffiliateNotification, sendWithdrawStatusEmail } = require('./email');
 const {
   initDb,
   findUserByIdentifier,
@@ -52,15 +54,26 @@ const {
   updateShipmentStatus,
   updateCycle,
   getUserDashboardData,
+  deactivateInactiveAccounts,
   seedCycles,
   checkMatrixCompletion,
   processHotmartPurchase,
+  createAuditLog,
+  getAuditLogs,
   supabase
 } = require('./database');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'unilevel_secret_key_2026';
+const PORT = process.env.PORT || 3001;
+
+if (!process.env.JWT_SECRET) {
+  console.error('╔══════════════════════════════════════════════════════════════╗');
+  console.error('║  SEGURANÇA: Variável JWT_SECRET não definida!              ║');
+  console.error('║  Defina JWT_SECRET no seu .env ou variável de ambiente.    ║');
+  console.error('║  O servidor usará um valor temporário INSEGURO.            ║');
+  console.error('╚══════════════════════════════════════════════════════════════╝');
+}
+const JWT_SECRET = process.env.JWT_SECRET || 'TEMPORARY_INSECURE_SECRET_' + Date.now();
 
 app.use(cors());
 app.use(express.json({
@@ -77,11 +90,26 @@ function authenticateToken(req, res, next) {
     return res.status(401).json({ error: 'Acesso negado. Token nÃ£o fornecido.' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
+  jwt.verify(token, JWT_SECRET, async (err, decoded) => {
     if (err) {
       return res.status(403).json({ error: 'Token invÃ¡lido ou expirado.' });
     }
-    req.user = user;
+    try {
+      const { data: dbUser } = await supabase
+        .from('users')
+        .select('account_status, role')
+        .eq('id', decoded.id)
+        .single();
+      req.user = {
+        ...decoded,
+        account_status: dbUser?.account_status || 'active',
+        role: dbUser?.role || decoded.role
+      };
+      // Atualizar last_active_at (fire and forget)
+      supabase.from('users').update({ last_active_at: new Date().toISOString() }).eq('id', decoded.id).then(() => {});
+    } catch (e) {
+      req.user = decoded;
+    }
     next();
   });
 }
@@ -92,6 +120,19 @@ function requireAdmin(req, res, next) {
     next();
   } else {
     return res.status(403).json({ error: 'Acesso negado. Ãrea exclusiva do Administrador Epi.' });
+  }
+}
+
+// Middleware: Conta deve estar ativa (após pagamento)
+function requireActiveAccount(req, res, next) {
+  if (req.user && (req.user.account_status === 'active' || req.user.role === 'admin')) {
+    next();
+  } else {
+    return res.status(403).json({ 
+      error: 'Conta pendente de ativação.', 
+      code: 'ACCOUNT_PENDING',
+      message: 'Complete o pagamento da taxa de registro para ativar sua conta.'
+    });
   }
 }
 
@@ -137,10 +178,14 @@ app.get('/api/sponsor/validate/:identifier', async (req, res) => {
 // 2. Registro com Matriz ForÃ§ada 3x3 e SeleÃ§Ã£o de Perna (Derrame)
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { name, email, password, sponsorIdentifier, targetLeg } = req.body;
+    const { name, email, password, sponsorIdentifier, targetLeg, phone } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Preencha todos os campos (nome, e-mail e senha).' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'A senha deve ter no mínimo 6 caracteres.' });
     }
 
     if (!sponsorIdentifier) {
@@ -167,7 +212,9 @@ app.post('/api/auth/register', async (req, res) => {
       passwordHash,
       referralCode,
       sponsorId: sponsor.id,
-      targetLeg: targetLeg || 'auto'
+      targetLeg: targetLeg || 'auto',
+      phone,
+      accountStatus: 'pending'
     });
 
     const userRole = 'user';
@@ -177,8 +224,19 @@ app.post('/api/auth/register', async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    const registrationFee = newUser.registration_fee || 80.00;
+    const hotmartCheckoutUrl = process.env.HOTMART_CHECKOUT_URL || '';
+
     res.status(201).json({
-      message: 'Cadastro na Matriz Epi realizado com sucesso!',
+      message: 'Cadastro realizado! Para ativar sua conta, complete o pagamento da taxa de registro.',
+      account_status: 'pending',
+      requires_payment: true,
+      payment: {
+        amount: registrationFee,
+        currency: 'USD',
+        checkout_url: hotmartCheckoutUrl,
+        description: 'Taxa de Registro - Matriz Epi 3x3'
+      },
       token,
       user: {
         id: newUser.id,
@@ -187,11 +245,27 @@ app.post('/api/auth/register', async (req, res) => {
         referral_code: newUser.referralCode,
         sponsor_name: sponsor.name,
         role: userRole,
-        registration_fee: 60.00,
+        account_status: 'pending',
+        registration_fee: registrationFee,
         fee_refunded: false,
         current_cycle: 'Socio Bronce'
       }
     });
+
+    // Enviar email de boas-vindas (async, não bloqueia resposta)
+    sendWelcomeEmail({
+      name: newUser.name,
+      email: newUser.email,
+      referral_code: newUser.referralCode,
+      sponsor_name: sponsor.name
+    }).catch(err => console.error('[Email] Erro boas-vindas:', err.message));
+
+    // Notificar patrocinador sobre novo afiliado
+    sendNewAffiliateNotification(sponsor, {
+      name: newUser.name,
+      email: newUser.email,
+      referral_code: newUser.referralCode
+    }).catch(err => console.error('[Email] Erro notificação patrocinador:', err.message));
   } catch (error) {
     console.error('Erro no registro Epi:', error);
     res.status(500).json({ error: 'Erro ao processar o cadastro na matriz.' });
@@ -243,6 +317,11 @@ app.post('/api/auth/login', async (req, res) => {
         registration_fee: user.registration_fee || 60.00,
         fee_refunded: Boolean(user.fee_refunded),
         current_cycle: user.current_cycle || 'Socio Bronce',
+        phone: user.phone || '',
+        date_of_birth: user.date_of_birth || '',
+        country: user.country || '',
+        document_photo_url: user.document_photo_url || '',
+        profile_completed: Boolean(user.profile_completed),
         created_at: user.created_at
       }
     });
@@ -252,12 +331,54 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// 3. Atualização de Perfil do Usuário
+app.put('/api/user/profile', [authenticateToken, requireActiveAccount], async (req, res) => {
+  try {
+    const { phone, date_of_birth, country, document_photo_url, shipping_address } = req.body;
+    const userId = req.user.id;
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({
+        phone: phone || undefined,
+        date_of_birth: date_of_birth || undefined,
+        country: country || undefined,
+        document_photo_url: document_photo_url || undefined,
+        shipping_address: shipping_address || undefined,
+        profile_completed: true
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    res.json({
+      message: 'Perfil actualizado con éxito',
+      user: {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        phone: data.phone || '',
+        date_of_birth: data.date_of_birth || '',
+        country: data.country || '',
+        document_photo_url: data.document_photo_url || '',
+        shipping_address: data.shipping_address || '',
+        profile_completed: Boolean(data.profile_completed)
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar perfil:', error.message);
+    res.status(500).json({ error: 'Erro ao actualizar el perfil.' });
+  }
+});
+
 // ----------------------------------------------------
 // ROTAS DO PAINEL DO USUÃRIO (DASHBOARD MATRIZ Epi)
 // ----------------------------------------------------
 
 // 4. Obter EstatÃ­sticas da Matriz 3x3 Fechada (39 Pessoas)
-app.get('/api/user/dashboard', authenticateToken, async (req, res) => {
+app.get('/api/user/dashboard', [authenticateToken, requireActiveAccount], async (req, res) => {
   try {
     const userId = req.user.id;
     const currentUser = await findUserByEmail(req.user.email);
@@ -308,7 +429,7 @@ app.get('/api/user/dashboard', authenticateToken, async (req, res) => {
 });
 
 // 5. Ãrvore da Matriz 3x3
-app.get('/api/user/tree', authenticateToken, async (req, res) => {
+app.get('/api/user/tree', [authenticateToken, requireActiveAccount], async (req, res) => {
   try {
     const userId = req.user.id;
     const tree = await getLspcTreeStructure(userId);
@@ -377,7 +498,11 @@ app.post('/api/admin/register-user', [authenticateToken, requireAdmin], async (r
     const { name, email, password, sponsorIdentifier, targetLeg } = req.body;
 
     if (!name || !email || !password || !sponsorIdentifier) {
-      return res.status(400).json({ error: 'Preencha todos os campos obrigatÃ³rios (nome, e-mail, senha e patrocinador).' });
+      return res.status(400).json({ error: 'Preencha todos os campos obrigatórios (nome, e-mail, senha e patrocinador).' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'A senha deve ter no mínimo 6 caracteres.' });
     }
 
     const existingUser = await findUserByEmail(email);
@@ -429,6 +554,18 @@ app.patch('/api/admin/users/:id/role', [authenticateToken, requireAdmin], async 
     }
 
     const updatedUser = await updateUserRole(userId, role);
+    
+    // Registrar log de auditoria
+    await createAuditLog({
+      adminUserId: req.user.id,
+      adminName: req.user.name,
+      action: 'role_change',
+      targetUserId: userId,
+      targetUserName: updatedUser.name,
+      details: `Rol cambiado de "${updatedUser.role === 'admin' ? 'user' : 'admin'}" a "${role}"`,
+      ipAddress: req.ip
+    });
+
     res.json({
       message: `Perfil do usuÃ¡rio #${userId} alterado para "${role}" com sucesso!`,
       user: updatedUser
@@ -445,14 +582,26 @@ app.post('/api/admin/users/:id/reset-password', [authenticateToken, requireAdmin
     const userId = parseInt(req.params.id, 10);
     const { newPassword } = req.body;
 
-    if (!newPassword || newPassword.trim().length < 4) {
-      return res.status(400).json({ error: 'A nova senha deve conter pelo menos 4 caracteres.' });
+    if (!newPassword || newPassword.trim().length < 6) {
+      return res.status(400).json({ error: 'A nova senha deve conter pelo menos 6 caracteres.' });
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await updateUserPassword(userId, passwordHash);
 
-    res.json({ message: `Senha do usuÃ¡rio #${userId} redefinida com sucesso!` });
+    // Registrar log de auditoria
+    const { data: targetUser } = await supabase.from('users').select('name').eq('id', userId).single();
+    await createAuditLog({
+      adminUserId: req.user.id,
+      adminName: req.user.name,
+      action: 'password_reset',
+      targetUserId: userId,
+      targetUserName: targetUser?.name || `Usuario #${userId}`,
+      details: 'Contraseña redefinida por administrador',
+      ipAddress: req.ip
+    });
+
+    res.json({ message: `Senha do usuário #${userId} redefinida com sucesso!` });
   } catch (error) {
     console.error('Erro ao redefinir senha pelo admin:', error);
     res.status(500).json({ error: 'Erro interno ao redefinir a senha do usuÃ¡rio.' });
@@ -468,8 +617,8 @@ app.post('/api/auth/reset-password', async (req, res) => {
       return res.status(400).json({ error: 'Informe o e-mail e a nova senha.' });
     }
 
-    if (newPassword.trim().length < 4) {
-      return res.status(400).json({ error: 'A nova senha deve ter no mÃ­nimo 4 caracteres.' });
+    if (newPassword.trim().length < 6) {
+      return res.status(400).json({ error: 'A nova senha deve ter no mínimo 6 caracteres.' });
     }
 
     const user = await findUserByEmail(email);
@@ -492,7 +641,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
 // ----------------------------------------------------
 
 // 12. Obter Carteira Digital do UsuÃ¡rio
-app.get('/api/user/wallet', authenticateToken, async (req, res) => {
+app.get('/api/user/wallet', [authenticateToken, requireActiveAccount], async (req, res) => {
   try {
     const wallet = await getUserWallet(req.user.id);
     res.json({ wallet });
@@ -503,7 +652,7 @@ app.get('/api/user/wallet', authenticateToken, async (req, res) => {
 });
 
 // 13. Solicitar Saque PIX
-app.post('/api/user/withdraw', authenticateToken, async (req, res) => {
+app.post('/api/user/withdraw', [authenticateToken, requireActiveAccount], async (req, res) => {
   try {
     const { amount, pixKey } = req.body;
 
@@ -545,6 +694,18 @@ app.patch('/api/admin/withdrawals/:id', [authenticateToken, requireAdmin], async
 
     const result = await processWithdrawal(withdrawalId, action);
     res.json(result);
+
+    // Enviar email de notificação sobre status do saque (async)
+    if (result.withdrawal) {
+      const w = result.withdrawal;
+      findUserByIdentifier(w.user_id?.toString()).then(user => {
+        if (user) {
+          sendWithdrawStatusEmail(user, w, action === 'approve' ? 'approved' : 'rejected').catch(
+            err => console.error('[Email] Erro notificação withdraw:', err.message)
+          );
+        }
+      }).catch(() => {});
+    }
   } catch (error) {
     console.error('Erro ao processar saque:', error);
     res.status(400).json({ error: error.message || 'Erro ao processar saque.' });
@@ -558,19 +719,42 @@ app.patch('/api/admin/users/:id/active', [authenticateToken, requireAdmin], asyn
     const { isActive } = req.body;
 
     const updated = await setUserActiveStatus(userId, Boolean(isActive));
+
+    // Registrar log de auditoria
+    await createAuditLog({
+      adminUserId: req.user.id,
+      adminName: req.user.name,
+      action: isActive ? 'account_activated' : 'account_deactivated',
+      targetUserId: userId,
+      targetUserName: updated.name,
+      details: `Conta ${isActive ? 'ativada' : 'desativada'} pelo administrador`,
+      ipAddress: req.ip
+    });
+
     res.json({
-      message: `Status de ativaÃ§Ã£o do usuÃ¡rio #${userId} alterado para "${updated.is_active ? 'ATIVO' : 'INATIVO'}"!`,
+      message: `Status de ativação do usuário #${userId} alterado para "${updated.is_active ? 'ATIVO' : 'INATIVO'}"!`,
       user: updated
     });
   } catch (error) {
-    console.error('Erro ao alterar ativaÃ§Ã£o do usuÃ¡rio:', error);
-    res.status(500).json({ error: 'Erro ao atualizar ativaÃ§Ã£o mensal.' });
+    console.error('Erro ao alterar ativação do usuário:', error);
+    res.status(500).json({ error: 'Erro ao atualizar ativação mensal.' });
   }
 });
 
 // ----------------------------------------------------
-// ROTAS DO MÃ“DULO LMS (CURSOS, AULAS E ÃREA DE MEMBROS)
+// ROTAS DO MÓDULO LMS (CURSOS, AULAS E ÁREA DE MEMBROS)
 // ----------------------------------------------------
+
+// Logs de Auditoria (Admin)
+app.get('/api/admin/audit-logs', [authenticateToken, requireAdmin], async (req, res) => {
+  try {
+    const logs = await getAuditLogs(100);
+    res.json({ logs });
+  } catch (error) {
+    console.error('Erro ao buscar logs de auditoria:', error.message);
+    res.status(500).json({ error: 'Erro ao carregar logs.' });
+  }
+});
 
 // 17. Listar Cursos Liberados para o Afiliado
 app.get('/api/courses', authenticateToken, async (req, res) => {
@@ -807,7 +991,7 @@ app.post('/api/quizzes/:id/submit', authenticateToken, async (req, res) => {
 });
 
 // 36. Verificar ConclusÃ£o e Gerar Dados do Certificado
-app.get('/api/user/courses/:id/certificate', authenticateToken, async (req, res) => {
+app.get('/api/user/courses/:id/certificate', [authenticateToken, requireActiveAccount], async (req, res) => {
   try {
     const courseId = parseInt(req.params.id, 10);
     const userId = req.user.id;
@@ -853,7 +1037,7 @@ app.get('/api/cycles', authenticateToken, async (req, res) => {
 });
 
 // 38. Progresso de ciclos do usuÃ¡rio
-app.get('/api/user/cycles', authenticateToken, async (req, res) => {
+app.get('/api/user/cycles', [authenticateToken, requireActiveAccount], async (req, res) => {
   try {
     const progress = await getUserCycleProgress(req.user.id);
     const { data: user } = await supabase
@@ -877,7 +1061,7 @@ app.get('/api/user/cycles', authenticateToken, async (req, res) => {
 });
 
 // 39. Solicitar upgrade de ciclo
-app.post('/api/user/upgrade', authenticateToken, async (req, res) => {
+app.post('/api/user/upgrade', [authenticateToken, requireActiveAccount], async (req, res) => {
   try {
     const { cycleId } = req.body;
     if (!cycleId) return res.status(400).json({ error: 'Informe o ciclo alvo.' });
@@ -891,7 +1075,7 @@ app.post('/api/user/upgrade', authenticateToken, async (req, res) => {
 });
 
 // 40. Extrato de transaÃ§Ãµes do usuÃ¡rio
-app.get('/api/user/transactions', authenticateToken, async (req, res) => {
+app.get('/api/user/transactions', [authenticateToken, requireActiveAccount], async (req, res) => {
   try {
     const transactions = await getUserTransactions(req.user.id, 50);
     res.json({ transactions });
@@ -902,7 +1086,7 @@ app.get('/api/user/transactions', authenticateToken, async (req, res) => {
 });
 
 // 41. Envios do usuÃ¡rio
-app.get('/api/user/shipments', authenticateToken, async (req, res) => {
+app.get('/api/user/shipments', [authenticateToken, requireActiveAccount], async (req, res) => {
   try {
     const shipments = await getUserShipments(req.user.id);
     res.json({ shipments });
@@ -913,7 +1097,7 @@ app.get('/api/user/shipments', authenticateToken, async (req, res) => {
 });
 
 // 42. Dashboard expandido do usuÃ¡rio
-app.get('/api/user/dashboard-full', authenticateToken, async (req, res) => {
+app.get('/api/user/dashboard-full', [authenticateToken, requireActiveAccount], async (req, res) => {
   try {
     const data = await getUserDashboardData(req.user.id);
     if (!data) return res.status(404).json({ error: 'UsuÃ¡rio nÃ£o encontrado.' });
@@ -1055,6 +1239,114 @@ app.post('/api/webhooks/hotmart', async (req, res) => {
   } catch (error) {
     console.error('âŒ [Hotmart Webhook] Erro interno:', error);
     return res.status(200).json({ message: 'Webhook received with error.' });
+  }
+});
+
+// ----------------------------------------------------
+// ADMIN: EXPIRAÇÃO DE CONTAS INATIVAS
+// ----------------------------------------------------
+app.post('/api/admin/expire-accounts', [authenticateToken, requireAdmin], async (req, res) => {
+  try {
+    const { days } = req.body;
+    const result = await deactivateInactiveAccounts(days || 90);
+    res.json({ message: `${result.deactivated} contas expiradas.`, ...result });
+  } catch (error) {
+    console.error('Erro ao expirar contas:', error);
+    res.status(500).json({ error: 'Erro ao processar expiração de contas.' });
+  }
+});
+
+// ----------------------------------------------------
+// GESTIÓN DE PRODUCTOS FÍSICOS (CRUD Admin)
+// ----------------------------------------------------
+
+// Listar todos los productos
+app.get('/api/admin/products', [authenticateToken, requireAdmin], async (req, res) => {
+  try {
+    const { data: products, error } = await supabase
+      .from('products')
+      .select('*, cycle:cycles(name, display_name)')
+      .order('id', { ascending: true });
+
+    if (error) throw new Error(error.message);
+    res.json({ products: products || [] });
+  } catch (error) {
+    console.error('Erro ao listar produtos:', error.message);
+    res.status(500).json({ error: 'Erro ao carregar produtos.' });
+  }
+});
+
+// Criar produto físico
+app.post('/api/admin/products', [authenticateToken, requireAdmin], async (req, res) => {
+  try {
+    const { cycle_id, name, description, sku, stock_quantity } = req.body;
+
+    if (!cycle_id || !name) {
+      return res.status(400).json({ error: 'Ciclo e nome do produto são obrigatórios.' });
+    }
+
+    const { data, error } = await supabase
+      .from('products')
+      .insert([{
+        cycle_id,
+        name,
+        description: description || '',
+        sku: sku || '',
+        stock_quantity: stock_quantity || 0,
+        is_active: true
+      }])
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    res.status(201).json({ message: 'Produto criado com sucesso!', product: data });
+  } catch (error) {
+    console.error('Erro ao criar produto:', error.message);
+    res.status(500).json({ error: 'Erro ao criar produto.' });
+  }
+});
+
+// Atualizar produto físico
+app.put('/api/admin/products/:id', [authenticateToken, requireAdmin], async (req, res) => {
+  try {
+    const productId = parseInt(req.params.id, 10);
+    const { cycle_id, name, description, sku, stock_quantity, is_active } = req.body;
+
+    const updates = {};
+    if (cycle_id !== undefined) updates.cycle_id = cycle_id;
+    if (name !== undefined) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (sku !== undefined) updates.sku = sku;
+    if (stock_quantity !== undefined) updates.stock_quantity = stock_quantity;
+    if (is_active !== undefined) updates.is_active = is_active;
+
+    const { data, error } = await supabase
+      .from('products')
+      .update(updates)
+      .eq('id', productId)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    res.json({ message: 'Produto atualizado com sucesso!', product: data });
+  } catch (error) {
+    console.error('Erro ao atualizar produto:', error.message);
+    res.status(500).json({ error: 'Erro ao atualizar produto.' });
+  }
+});
+
+// Excluir produto físico
+app.delete('/api/admin/products/:id', [authenticateToken, requireAdmin], async (req, res) => {
+  try {
+    const productId = parseInt(req.params.id, 10);
+
+    const { error } = await supabase.from('products').delete().eq('id', productId);
+    if (error) throw new Error(error.message);
+
+    res.json({ message: 'Produto excluído com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao excluir produto:', error.message);
+    res.status(500).json({ error: 'Erro ao excluir produto.' });
   }
 });
 

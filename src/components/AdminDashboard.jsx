@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Download, Search, Users, UserCheck, Layers, RefreshCw, DollarSign, Award, UserPlus, CheckCircle2, AlertCircle, ChevronUp, ChevronDown, Key, ShieldCheck, Lock, X, Wallet, Power, Send, Clock, BookOpen, Plus, Trash2, Edit, Video, Eye, EyeOff, PlayCircle } from 'lucide-react';
+import { Shield, Download, Search, Users, UserCheck, Layers, RefreshCw, DollarSign, Award, UserPlus, CheckCircle2, AlertCircle, ChevronUp, ChevronDown, Key, ShieldCheck, Lock, X, Wallet, Power, Send, Clock, BookOpen, Plus, Trash2, Edit, Video, Eye, EyeOff, PlayCircle, ChevronLeft, ChevronRight, Package } from 'lucide-react';
 
 export default function AdminDashboard({ token }) {
   const [users, setUsers] = useState([]);
@@ -8,13 +8,16 @@ export default function AdminDashboard({ token }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const USERS_PER_PAGE = 15;
 
   // Formulario Retrátil de Registro Manual encima de la tabla
   const [showAddForm, setShowAddForm] = useState(false);
   const [addForm, setAddForm] = useState({
     name: '',
     email: '',
-    password: '123456',
+    password: '',
     sponsorIdentifier: 'ADMIN100',
     targetLeg: 'auto'
   });
@@ -32,6 +35,8 @@ export default function AdminDashboard({ token }) {
   const [withdrawActionMessage, setWithdrawActionMessage] = useState('');
   const [adminCycles, setAdminCycles] = useState([]);
   const [adminShipments, setAdminShipments] = useState([]);
+  const [adminProducts, setAdminProducts] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
 
   // Estados de la Gestión de Cursos LMS
   const [showCourseModal, setShowCourseModal] = useState(false);
@@ -49,35 +54,94 @@ export default function AdminDashboard({ token }) {
   const [questionForm, setQuestionForm] = useState({ quiz_id: null, question_text: '', correct_option_index: 0, options: ['', '', '', ''] });
   const [lessonForm, setLessonForm] = useState({ module_id: null, title: '', description: '', video_url: '', duration: '10:00', order_index: 1 });
 
+  // Cycle management states
+  const [showCycleEditModal, setShowCycleEditModal] = useState(false);
+  const [cycleEditForm, setCycleEditForm] = useState({ id: null, price: '', bonus_per_referral: '', refund_amount: '', description: '' });
+
+  const handleEditCycle = (cycle) => {
+    setCycleEditForm({
+      id: cycle.id,
+      price: cycle.price,
+      bonus_per_referral: cycle.bonus_per_referral,
+      refund_amount: cycle.refund_amount,
+      description: cycle.description || ''
+    });
+    setShowCycleEditModal(true);
+  };
+
+  const handleSaveCycle = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`/api/admin/cycles/${cycleEditForm.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          price: parseFloat(cycleEditForm.price),
+          bonus_per_referral: parseFloat(cycleEditForm.bonus_per_referral),
+          refund_amount: parseFloat(cycleEditForm.refund_amount),
+          description: cycleEditForm.description
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setActionMessage(data.message);
+      setShowCycleEditModal(false);
+      fetchUsers();
+      setTimeout(() => setActionMessage(''), 3500);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  // Product management states
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [productForm, setProductForm] = useState({ id: null, cycle_id: '', name: '', description: '', sku: '', stock_quantity: 0 });
+
   const fetchUsers = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const [usersRes, withdrawRes, coursesRes, cyclesRes, shipmentsRes] = await Promise.all([
+      console.log('[Admin] Iniciando fetchUsers, token:', token ? token.substring(0, 20) + '...' : 'null');
+      const [usersRes, withdrawRes, coursesRes, cyclesRes, shipmentsRes, productsRes, auditRes] = await Promise.all([
         fetch('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/admin/withdrawals', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/admin/courses', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/admin/cycles', { headers: { Authorization: `Bearer ${token}` } }),
-        fetch('/api/admin/shipments', { headers: { Authorization: `Bearer ${token}` } })
+        fetch('/api/admin/shipments', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('/api/admin/products', { headers: { Authorization: `Bearer ${token}` } }),
+        fetch('/api/admin/audit-logs', { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
-      if (!usersRes.ok) throw new Error('Error al cargar la lista de usuarios para administración.');
+      console.log('[Admin] Responses:', { users: usersRes.status, withdraw: withdrawRes.status, courses: coursesRes.status, cycles: cyclesRes.status, shipments: shipmentsRes.status, products: productsRes.status, audit: auditRes.status });
+
+      if (!usersRes.ok) {
+        const errBody = await usersRes.json().catch(() => ({}));
+        throw new Error(`Error ${usersRes.status}: ${errBody.error || 'Error al cargar la lista de usuarios para administración.'}`);
+      }
 
       const data = await usersRes.json();
       const withdrawData = withdrawRes.ok ? await withdrawRes.json() : { withdrawals: [] };
       const coursesData = coursesRes.ok ? await coursesRes.json() : { courses: [] };
       const cyclesData = cyclesRes.ok ? await cyclesRes.json() : { cycles: [] };
       const shipmentsData = shipmentsRes.ok ? await shipmentsRes.json() : { shipments: [] };
+      const productsData = productsRes.ok ? await productsRes.json() : { products: [] };
+      const auditData = auditRes.ok ? await auditRes.json() : { logs: [] };
+
+      console.log('[Admin] Data loaded:', { users: data.users?.length, cycles: cyclesData.cycles?.length, courses: coursesData.courses?.length });
 
       setUsers(data.users);
       setWithdrawals(withdrawData.withdrawals || []);
       setAdminCourses(coursesData.courses || []);
       setAdminCycles(cyclesData.cycles || []);
       setAdminShipments(shipmentsData.shipments || []);
+      setAdminProducts(productsData.products || []);
+      setAuditLogs(auditData.logs || []);
 
       if (data.users && data.users.length > 0 && !addForm.sponsorIdentifier) {
         setAddForm(prev => ({ ...prev, sponsorIdentifier: data.users[0].referral_code }));
       }
     } catch (err) {
+      console.error('[Admin] Error en fetchUsers:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -302,6 +366,12 @@ export default function AdminDashboard({ token }) {
     setAddSuccess('');
     setAddLoading(true);
 
+    if (addForm.password.length < 6) {
+      setAddError('La contraseña debe tener al menos 6 caracteres.');
+      setAddLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/admin/register-user', {
         method: 'POST',
@@ -318,7 +388,7 @@ export default function AdminDashboard({ token }) {
       }
 
       setAddSuccess(data.message);
-      setAddForm({ name: '', email: '', password: '123456', sponsorIdentifier: users[0]?.referral_code || 'ADMIN100', targetLeg: 'auto' });
+      setAddForm({ name: '', email: '', password: '', sponsorIdentifier: users[0]?.referral_code || 'ADMIN100', targetLeg: 'auto' });
       fetchUsers(); // Recargar tabla de la matriz
       setTimeout(() => {
         setAddSuccess('');
@@ -434,12 +504,61 @@ export default function AdminDashboard({ token }) {
     }
   };
 
+  const handleSaveProduct = async (e) => {
+    e.preventDefault();
+    try {
+      const isEdit = Boolean(productForm.id);
+      const url = isEdit ? `/api/admin/products/${productForm.id}` : '/api/admin/products';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(productForm)
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al guardar producto.');
+
+      setActionMessage(data.message);
+      setShowProductModal(false);
+      setProductForm({ id: null, cycle_id: '', name: '', description: '', sku: '', stock_quantity: 0 });
+      fetchUsers();
+      setTimeout(() => setActionMessage(''), 3500);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    if (!window.confirm('¿Está seguro de eliminar este producto físico?')) return;
+    try {
+      const res = await fetch(`/api/admin/products/${productId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setActionMessage(data.message);
+      fetchUsers();
+      setTimeout(() => setActionMessage(''), 3500);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const handleAdminResetPassword = async (e) => {
     e.preventDefault();
     if (!resetModalUser) return;
     setResetModalError('');
     setResetModalSuccess('');
     setResetModalLoading(true);
+
+    if (newPasswordInput.length < 6) {
+      setResetModalError('La contraseña debe tener al menos 6 caracteres.');
+      setResetModalLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch(`/api/admin/users/${resetModalUser.id}/reset-password`, {
@@ -469,19 +588,43 @@ export default function AdminDashboard({ token }) {
 
   const filteredUsers = users.filter(u => {
     const term = searchTerm.toLowerCase();
-    return (
+    const matchesSearch = (
       u.name.toLowerCase().includes(term) ||
       u.email.toLowerCase().includes(term) ||
       u.referral_code.toLowerCase().includes(term) ||
-      (u.sponsor_name && u.sponsor_name.toLowerCase().includes(term))
+      (u.sponsor_name && u.sponsor_name.toLowerCase().includes(term)) ||
+      (u.phone && u.phone.toLowerCase().includes(term))
     );
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'active' && u.is_active !== false) ||
+      (statusFilter === 'inactive' && u.is_active === false) ||
+      (statusFilter === 'paid' && u.fee_refunded) ||
+      (statusFilter === 'pending' && !u.fee_refunded);
+    return matchesSearch && matchesStatus;
   });
+
+  const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * USERS_PER_PAGE, currentPage * USERS_PER_PAGE);
+
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, statusFilter]);
 
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
         <RefreshCw size={32} className="animate-spin" style={{ margin: '0 auto 1rem', display: 'block' }} />
         Cargando visión global de la Matriz Epi...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem' }}>
+        <p style={{ color: '#ef4444', fontSize: '1.1rem', marginBottom: '1rem' }}>⚠ Error al cargar el panel de administración:</p>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{error}</p>
+        <button className="nav-btn nav-btn-primary" style={{ marginTop: '1rem', cursor: 'pointer' }} onClick={fetchUsers}>
+          <RefreshCw size={18} /> Reintentar
+        </button>
       </div>
     );
   }
@@ -903,6 +1046,7 @@ export default function AdminDashboard({ token }) {
                   <th>Reembolso</th>
                   <th>Orden</th>
                   <th>Activo</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -921,6 +1065,16 @@ export default function AdminDashboard({ token }) {
                       ) : (
                         <span className="origin-badge origin-spillover" style={{ color: '#f43f5e', borderColor: 'rgba(244,63,94,0.4)' }}>🔒 Inactivo</span>
                       )}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="nav-btn nav-btn-primary"
+                        style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', cursor: 'pointer' }}
+                        onClick={() => handleEditCycle(c)}
+                      >
+                        ✏️ Editar
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -999,6 +1153,90 @@ export default function AdminDashboard({ token }) {
         )}
       </div>
 
+      {/* SECCIÓN DE GESTIÓN DE PRODUCTOS FÍSICOS */}
+      <div className="glass-card" style={{ marginBottom: '1.5rem', border: '1px solid var(--primary-glow)' }}>
+        <div className="card-header">
+          <div className="card-title">
+            <Package size={22} style={{ color: '#34d399' }} />
+            <span>Productos Físicos ({adminProducts.length})</span>
+          </div>
+          <button
+            type="button"
+            className="nav-btn nav-btn-primary"
+            style={{ cursor: 'pointer', gap: '0.4rem' }}
+            onClick={() => {
+              setProductForm({ id: null, cycle_id: adminCycles[0]?.id || '', name: '', description: '', sku: '', stock_quantity: 0 });
+              setShowProductModal(true);
+            }}
+          >
+            <Plus size={18} /> Nuevo Producto
+          </button>
+        </div>
+
+        {adminProducts.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+            Ningún producto físico registrado. Los productos se crean para los ciclos con producto físico (Ouro, Platino, Diamante).
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <table className="custom-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Ciclo</th>
+                  <th>SKU</th>
+                  <th>Stock</th>
+                  <th>Estado</th>
+                  <th style={{ textAlign: 'center' }}>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {adminProducts.map((p) => (
+                  <tr key={p.id}>
+                    <td style={{ color: 'var(--text-subtle)' }}>#{p.id}</td>
+                    <td style={{ fontWeight: 700 }}>{p.name}</td>
+                    <td><span className="level-badge level-1">{p.cycle?.display_name || '—'}</span></td>
+                    <td style={{ fontFamily: 'monospace', color: '#67e8f9' }}>{p.sku || '—'}</td>
+                    <td style={{ fontWeight: 700, color: p.stock_quantity > 0 ? '#34d399' : '#f43f5e' }}>{p.stock_quantity}</td>
+                    <td>
+                      {p.is_active !== false ? (
+                        <span className="origin-badge origin-direct">✅ Activo</span>
+                      ) : (
+                        <span className="origin-badge origin-spillover" style={{ color: '#f43f5e', borderColor: 'rgba(244,63,94,0.4)' }}>🔒 Inactivo</span>
+                      )}
+                    </td>
+                    <td style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'center' }}>
+                        <button
+                          type="button"
+                          className="demo-pill"
+                          style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', borderColor: 'rgba(251,191,36,0.3)', cursor: 'pointer' }}
+                          onClick={() => {
+                            setProductForm({ id: p.id, cycle_id: p.cycle_id, name: p.name, description: p.description || '', sku: p.sku || '', stock_quantity: p.stock_quantity || 0 });
+                            setShowProductModal(true);
+                          }}
+                        >
+                          <Edit size={12} /> Editar
+                        </button>
+                        <button
+                          type="button"
+                          className="demo-pill"
+                          style={{ background: 'rgba(244,63,94,0.15)', color: '#f43f5e', borderColor: 'rgba(244,63,94,0.4)', cursor: 'pointer' }}
+                          onClick={() => handleDeleteProduct(p.id)}
+                        >
+                          <Trash2 size={12} /> Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {/* PANEL RETRÁTIL DE REGISTRO MANUAL ENCIMA DE LA TABLA */}
       {showAddForm && (
         <div className="glass-card" style={{ marginBottom: '1.5rem', border: '1px solid var(--primary-glow)', background: 'linear-gradient(135deg, rgba(26, 37, 60, 0.95), rgba(15, 23, 42, 0.95))' }}>
@@ -1055,14 +1293,15 @@ export default function AdminDashboard({ token }) {
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Contraseña Temporal</label>
+                <label className="form-label">Contraseña Segura (mín. 6 caracteres)</label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="123456"
+                  placeholder="Defina una contraseña segura..."
                   style={{ paddingLeft: '1rem' }}
                   value={addForm.password}
                   onChange={(e) => setAddForm({ ...addForm, password: e.target.value })}
+                  minLength={6}
                   required
                 />
               </div>
@@ -1125,20 +1364,37 @@ export default function AdminDashboard({ token }) {
 
       {/* TABLA ADMIN */}
       <div className="glass-card">
-        <div className="card-header">
+        <div className="card-header" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
           <div className="card-title">
             <Users size={20} style={{ color: 'var(--accent-cyan)' }} />
-            <span>Matriz Global de Afiliados ({filteredUsers.length})</span>
+            <span>Gestión de Usuarios ({filteredUsers.length})</span>
           </div>
 
-          <div className="search-bar" style={{ margin: 0 }}>
-            <Search size={16} style={{ color: 'var(--text-subtle)' }} />
-            <input
-              type="text"
-              placeholder="Buscar por nombre, correo o código..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{
+                padding: '0.45rem 0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)',
+                background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: '0.82rem', outline: 'none'
+              }}
+            >
+              <option value="all" style={{ background: '#0f172a' }}>Todos</option>
+              <option value="active" style={{ background: '#0f172a' }}>✅ Activos</option>
+              <option value="inactive" style={{ background: '#0f172a' }}>❌ Inactivos</option>
+              <option value="paid" style={{ background: '#0f172a' }}>💰 Pagaron</option>
+              <option value="pending" style={{ background: '#0f172a' }}>⏳ Pendientes</option>
+            </select>
+
+            <div className="search-bar" style={{ margin: 0 }}>
+              <Search size={16} style={{ color: 'var(--text-subtle)' }} />
+              <input
+                type="text"
+                placeholder="Buscar nombre, correo, código o teléfono..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
         </div>
 
@@ -1149,39 +1405,40 @@ export default function AdminDashboard({ token }) {
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Correo</th>
+                <th>Teléfono</th>
                 <th>Perfil</th>
-                <th>Estado Cuenta</th>
+                <th>Estado</th>
+                <th>Pago</th>
+                <th>Ciclo</th>
                 <th>Patrocinador</th>
-                <th>Asignado en</th>
                 <th>Pierna</th>
-                <th>Reembolso $US 60</th>
-                <th>Maestros</th>
-                <th>Total 39</th>
-                <th style={{ textAlign: 'center' }}>Acciones de Gestión</th>
+                <th>Fecha Registro</th>
+                <th style={{ textAlign: 'center' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map((u) => (
+              {paginatedUsers.map((u) => (
                 <tr key={u.id}>
                   <td style={{ color: 'var(--text-subtle)', fontWeight: 600 }}>#{u.id}</td>
                   <td style={{ fontWeight: 700 }}>{u.name}</td>
-                  <td style={{ color: 'var(--text-muted)' }}>{u.email}</td>
+                  <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{u.email}</td>
+                  <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{u.phone || '—'}</td>
                   <td>
                     {u.role === 'admin' ? (
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                        padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700,
+                        padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700,
                         background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.4)'
                       }}>
-                        <ShieldCheck size={13} /> Admin
+                        <ShieldCheck size={12} /> Admin
                       </span>
                     ) : (
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                        padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600,
+                        padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600,
                         background: 'rgba(148, 163, 184, 0.1)', color: '#94a3b8', border: '1px solid rgba(148, 163, 184, 0.2)'
                       }}>
-                        Usuario
+                        User
                       </span>
                     )}
                   </td>
@@ -1189,51 +1446,55 @@ export default function AdminDashboard({ token }) {
                     {u.is_active !== false ? (
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                        padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700,
+                        padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700,
                         background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.4)'
-                      }}>
-                        Activo
-                      </span>
+                      }}>Activo</span>
                     ) : (
                       <span style={{
                         display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                        padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700,
+                        padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700,
                         background: 'rgba(244, 63, 94, 0.2)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.4)'
-                      }}>
-                        Inactivo
-                      </span>
+                      }}>Inactivo</span>
                     )}
-                  </td>
-                  <td>{u.sponsor_name || 'Ninguno'}</td>
-                  <td>{u.placement_name || 'Ninguno'}</td>
-                  <td>
-                    {u.position ? (
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                        padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700,
-                        background: u.position === 1 ? 'rgba(99,102,241,0.2)' : u.position === 2 ? 'rgba(52,211,153,0.2)' : 'rgba(251,191,36,0.2)',
-                        color: u.position === 1 ? '#818cf8' : u.position === 2 ? '#34d399' : '#fbbf24',
-                        border: `1px solid ${u.position === 1 ? 'rgba(99,102,241,0.4)' : u.position === 2 ? 'rgba(52,211,153,0.4)' : 'rgba(251,191,36,0.4)'}`
-                      }}>
-                        {u.position === 1 ? '👈 P.1' : u.position === 2 ? '🎯 P.2' : '👉 P.3'}
-                      </span>
-                    ) : <span style={{ color: 'var(--text-subtle)' }}>— Raíz</span>}
                   </td>
                   <td>
                     {u.fee_refunded ? (
-                      <span className="origin-badge origin-direct">✅ $US 60</span>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                        padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700,
+                        background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', border: '1px solid rgba(16,185,129,0.3)'
+                      }}>✅ Pagado</span>
                     ) : (
-                      <span className="origin-badge origin-spillover" style={{ color: '#fbbf24', borderColor: 'rgba(251,191,36,0.3)' }}>
-                        ⏳ Pendiente
-                      </span>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                        padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700,
+                        background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)'
+                      }}>⏳ Pendiente</span>
                     )}
                   </td>
-                  <td><span className="level-badge level-1">{u.maestros_count} / 3</span></td>
                   <td>
-                    <strong style={{ color: '#fbbf24' }}>{u.total_matrix} / 39</strong>
+                    <span style={{
+                      padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700,
+                      background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)'
+                    }}>{u.current_cycle || 'Bronze'}</span>
+                  </td>
+                  <td style={{ fontSize: '0.82rem' }}>{u.sponsor_name || '—'}</td>
+                  <td>
+                    {u.position ? (
+                      <span style={{
+                        padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700,
+                        background: u.position === 1 ? 'rgba(99,102,241,0.2)' : u.position === 2 ? 'rgba(52,211,153,0.2)' : 'rgba(251,191,36,0.2)',
+                        color: u.position === 1 ? '#818cf8' : u.position === 2 ? '#34d399' : '#fbbf24'
+                      }}>
+                        {u.position === 1 ? '👈 P.1' : u.position === 2 ? '🎯 P.2' : '👉 P.3'}
+                      </span>
+                    ) : <span style={{ color: 'var(--text-subtle)', fontSize: '0.82rem' }}>Raíz</span>}
+                  </td>
+                  <td style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    {u.created_at ? new Date(u.created_at).toLocaleDateString('es-AR') : '—'}
                   </td>
                   <td style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'center' }}>
+                    <div style={{ display: 'flex', gap: '0.3rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                       <button
                         type="button"
                         className="demo-pill"
@@ -1241,59 +1502,141 @@ export default function AdminDashboard({ token }) {
                           background: u.is_active !== false ? 'rgba(244, 63, 94, 0.15)' : 'rgba(16, 185, 129, 0.15)',
                           color: u.is_active !== false ? '#f43f5e' : '#34d399',
                           borderColor: u.is_active !== false ? 'rgba(244, 63, 94, 0.3)' : 'rgba(16, 185, 129, 0.3)',
-                          cursor: 'pointer',
-                          display: 'inline-flex', alignItems: 'center', gap: '0.2rem'
+                          cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.2rem'
                         }}
                         onClick={() => handleToggleActive(u)}
-                        title={u.is_active !== false ? 'Desactivar Afiliado' : 'Activar Afiliado'}
+                        title={u.is_active !== false ? 'Desactivar' : 'Activar'}
                       >
-                        <Power size={11} /> {u.is_active !== false ? 'Desactivar' : 'Activar'}
+                        <Power size={11} /> {u.is_active !== false ? 'Off' : 'On'}
                       </button>
-
                       <button
                         type="button"
                         className="demo-pill"
                         style={{
-                          background: u.role === 'admin' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                          color: u.role === 'admin' ? '#f87171' : '#34d399',
-                          borderColor: u.role === 'admin' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)',
-                          cursor: 'pointer'
+                          background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24',
+                          borderColor: 'rgba(251, 191, 36, 0.3)', cursor: 'pointer',
+                          display: 'inline-flex', alignItems: 'center', gap: '0.2rem'
                         }}
-                        onClick={() => handleToggleRole(u)}
-                        title={u.role === 'admin' ? 'Degradar a Usuario' : 'Promover a Administrador'}
+                        onClick={() => { setResetModalUser(u); setNewPasswordInput(''); setResetModalError(''); setResetModalSuccess(''); }}
+                        title="Redefinir Contraseña"
                       >
-                        {u.role === 'admin' ? 'User' : 'Admin'}
-                      </button>
-
-                      <button
-                        type="button"
-                        className="demo-pill"
-                        style={{
-                          background: 'rgba(251, 191, 36, 0.15)',
-                          color: '#fbbf24',
-                          borderColor: 'rgba(251, 191, 36, 0.3)',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.2rem',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => {
-                          setResetModalUser(u);
-                          setNewPasswordInput('123456');
-                          setResetModalError('');
-                          setResetModalSuccess('');
-                        }}
-                        title="Redefinir Contraseña del Afiliado"
-                      >
-                        <Key size={11} /> Contraseña
+                        <Key size={11} />
                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
+              {paginatedUsers.length === 0 && (
+                <tr>
+                  <td colSpan="12" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                    No se encontraron usuarios con los filtros aplicados.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
+
+        {/* PAGINACIÓN */}
+        {totalPages > 1 && (
+          <div style={{
+            display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem',
+            padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.06)'
+          }}>
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              style={{
+                padding: '0.4rem 0.6rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)',
+                background: 'rgba(255,255,255,0.05)', color: currentPage === 1 ? '#475569' : '#fff',
+                cursor: currentPage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center'
+              }}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                style={{
+                  padding: '0.4rem 0.7rem', borderRadius: '8px', border: 'none',
+                  background: page === currentPage ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'transparent',
+                  color: page === currentPage ? '#fff' : '#94a3b8', fontWeight: page === currentPage ? 700 : 400,
+                  cursor: 'pointer', fontSize: '0.85rem'
+                }}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              style={{
+                padding: '0.4rem 0.6rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)',
+                background: 'rgba(255,255,255,0.05)', color: currentPage === totalPages ? '#475569' : '#fff',
+                cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center'
+              }}
+            >
+              <ChevronRight size={16} />
+            </button>
+            <span style={{ fontSize: '0.82rem', color: '#64748b', marginLeft: '0.5rem' }}>
+              Página {currentPage} de {totalPages} ({filteredUsers.length} usuarios)
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* SECCIÓN DE LOGS DE AUDITORÍA */}
+      <div className="glass-card" style={{ marginBottom: '1.5rem', border: '1px solid var(--primary-glow)' }}>
+        <div className="card-header">
+          <div className="card-title">
+            <Clock size={22} style={{ color: '#f59e0b' }} />
+            <span>Registro de Auditoría ({auditLogs.length})</span>
+          </div>
+        </div>
+
+        {auditLogs.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+            Ninguna acción administrativa registrada aún.
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <table className="custom-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Administrador</th>
+                  <th>Acción</th>
+                  <th>Usuario Afectado</th>
+                  <th>Detalles</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditLogs.slice(0, 20).map((log) => (
+                  <tr key={log.id}>
+                    <td style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                      {new Date(log.created_at).toLocaleDateString('es-ES')} {new Date(log.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                    <td style={{ fontWeight: 700 }}>{log.admin_name}</td>
+                    <td>
+                      <span style={{
+                        padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 700,
+                        background: log.action.includes('activated') ? 'rgba(16,185,129,0.15)' : log.action.includes('deactivated') ? 'rgba(244,63,94,0.15)' : 'rgba(99,102,241,0.15)',
+                        color: log.action.includes('activated') ? '#34d399' : log.action.includes('deactivated') ? '#f43f5e' : '#818cf8'
+                      }}>
+                        {log.action === 'role_change' ? '🔄 Rol' : log.action === 'password_reset' ? '🔑 Senha' : log.action === 'account_activated' ? '✅ Ativado' : '❌ Desativado'}
+                      </span>
+                    </td>
+                    <td style={{ fontSize: '0.85rem' }}>{log.target_user_name || '—'}</td>
+                    <td style={{ fontSize: '0.78rem', color: 'var(--text-muted)', maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {log.details || '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* MODAL DE CREAR / EDITAR CURSO */}
@@ -1638,6 +1981,103 @@ export default function AdminDashboard({ token }) {
         </div>
       )}
 
+      {/* MODAL DE PRODUCTO FÍSICO */}
+      {showProductModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem'
+        }}>
+          <div className="glass-card" style={{ maxWidth: '480px', width: '100%', border: '1px solid var(--primary-glow)', background: '#0f172a' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ color: '#fff', fontSize: '1.1rem' }}>
+                {productForm.id ? 'Editar Producto Físico' : 'Nuevo Producto Físico'}
+              </h3>
+              <button type="button" className="nav-btn nav-btn-ghost" onClick={() => setShowProductModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProduct}>
+              <div className="form-group">
+                <label className="form-label">Ciclo Asociado</label>
+                <select
+                  className="form-input"
+                  style={{ paddingLeft: '1rem', background: '#0f172a', color: '#fff' }}
+                  value={productForm.cycle_id}
+                  onChange={(e) => setProductForm({ ...productForm, cycle_id: parseInt(e.target.value, 10) })}
+                  required
+                >
+                  <option value="">Seleccionar ciclo...</option>
+                  {adminCycles.filter(c => c.product_type === 'physical' || c.product_type === 'both').map(c => (
+                    <option key={c.id} value={c.id}>{c.display_name} (${c.price})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Nombre del Producto</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  style={{ paddingLeft: '1rem' }}
+                  placeholder="Ej: Kit Vitaminas Exclusivas Epi"
+                  value={productForm.name}
+                  onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Descripción</label>
+                <textarea
+                  className="form-input"
+                  style={{ paddingLeft: '1rem', minHeight: '60px', fontFamily: 'inherit' }}
+                  placeholder="Descripción del producto..."
+                  value={productForm.description}
+                  onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">SKU</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ paddingLeft: '1rem' }}
+                    placeholder="EPI-VIT-001"
+                    value={productForm.sku}
+                    onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Stock Disponible</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    style={{ paddingLeft: '1rem' }}
+                    value={productForm.stock_quantity}
+                    onChange={(e) => setProductForm({ ...productForm, stock_quantity: parseInt(e.target.value, 10) || 0 })}
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                <button type="button" className="nav-btn nav-btn-outline" onClick={() => setShowProductModal(false)}>
+                  Cancelar
+                </button>
+                <button type="submit" className="nav-btn nav-btn-primary">
+                  {productForm.id ? 'Guardar Cambios' : 'Crear Producto'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* MODAL DE REDEFINICIÓN DE CONTRASEÑA POR EL ADMIN */}
       {resetModalUser && (
         <div style={{
@@ -1676,7 +2116,7 @@ export default function AdminDashboard({ token }) {
 
             <form onSubmit={handleAdminResetPassword}>
               <div className="form-group">
-                <label className="form-label">Nueva Contraseña</label>
+                <label className="form-label">Nueva Contraseña (mín. 6 caracteres)</label>
                 <div className="input-wrapper">
                   <Lock className="input-icon" size={18} />
                   <input
@@ -1697,6 +2137,47 @@ export default function AdminDashboard({ token }) {
                 <button type="submit" className="nav-btn nav-btn-primary" disabled={resetModalLoading}>
                   {resetModalLoading ? 'Guardando...' : 'Guardar Nueva Contraseña'}
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL EDITAR CICLO */}
+      {showCycleEditModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem'
+        }}>
+          <div className="glass-card" style={{ maxWidth: '420px', width: '100%', border: '1px solid #a855f7', background: '#0f172a' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ color: '#fff', fontSize: '1.1rem' }}>✏️ Editar Ciclo #{cycleEditForm.id}</h3>
+              <button type="button" className="nav-btn nav-btn-ghost" onClick={() => setShowCycleEditModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCycle}>
+              <div className="form-group">
+                <label className="form-label">Precio ($US)</label>
+                <input type="number" step="0.01" className="form-input" value={cycleEditForm.price} onChange={e => setCycleEditForm({ ...cycleEditForm, price: e.target.value })} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Bono por Indicación ($US)</label>
+                <input type="number" step="0.01" className="form-input" value={cycleEditForm.bonus_per_referral} onChange={e => setCycleEditForm({ ...cycleEditForm, bonus_per_referral: e.target.value })} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Reembolso por Matriz ($US)</label>
+                <input type="number" step="0.01" className="form-input" value={cycleEditForm.refund_amount} onChange={e => setCycleEditForm({ ...cycleEditForm, refund_amount: e.target.value })} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Descripción</label>
+                <textarea className="form-input" rows={3} value={cycleEditForm.description} onChange={e => setCycleEditForm({ ...cycleEditForm, description: e.target.value })} />
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                <button type="button" className="nav-btn nav-btn-outline" onClick={() => setShowCycleEditModal(false)}>Cancelar</button>
+                <button type="submit" className="nav-btn nav-btn-primary">Guardar Cambios</button>
               </div>
             </form>
           </div>

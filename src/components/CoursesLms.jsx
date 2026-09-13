@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, PlayCircle, CheckCircle2, Lock, ArrowLeft, RefreshCw, Layers, Clock, Award, ShieldAlert, Sparkles, Check } from 'lucide-react';
 
-export default function CoursesLms({ token }) {
+export default function CoursesLms({ token, currentUser }) {
+  const user = currentUser || (() => {
+    try { return JSON.parse(localStorage.getItem('unilevel_user')); } catch { return null; }
+  })();
+  const isAdmin = user?.role === 'admin';
+
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [courseDetails, setCourseDetails] = useState(null);
@@ -44,6 +49,10 @@ export default function CoursesLms({ token }) {
 
   // Cargar detalles del curso y quizzes
   const handleSelectCourse = async (courseId) => {
+    if (!isAdmin) {
+      alert('Acceso restringido: Los cursos están temporalmente bloqueados por el administrador.');
+      return;
+    }
     setDetailsLoading(true);
     setSelectedCourse(courseId);
     try {
@@ -199,19 +208,36 @@ export default function CoursesLms({ token }) {
             </p>
           </div>
         ) : (
-          <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'rgba(59,130,246,0.1)', borderRadius: '8px', border: '1px solid rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Award size={20} style={{ color: '#60a5fa' }} />
-            <span style={{ fontSize: '0.9rem', color: '#93c5fd' }}>
-              Su ciclo actual: <strong>{userCycle?.display_name || 'Bronze'}</strong> — Acceda a cursos de su nivel o superior.
-            </span>
-          </div>
+          !isAdmin ? (
+            <div style={{ marginBottom: '1.25rem', padding: '0.85rem 1.25rem', background: 'rgba(239, 68, 68, 0.12)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.35)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <ShieldAlert size={24} style={{ color: '#ef4444', flexShrink: 0 }} />
+              <div>
+                <div style={{ color: '#fca5a5', fontWeight: 700, fontSize: '0.95rem' }}>
+                  Contenido en Mantenimiento / Acceso Restringido
+                </div>
+                <div style={{ color: '#f87171', fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                  El acceso a los cursos se encuentra bloqueado temporalmente por la administración.
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ marginBottom: '1.25rem', padding: '0.75rem 1rem', background: 'rgba(16, 185, 129, 0.12)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.35)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Sparkles size={20} style={{ color: '#10b981', flexShrink: 0 }} />
+              <span style={{ fontSize: '0.88rem', color: '#6ee7b7' }}>
+                <strong>Modo Administrador:</strong> Tienes acceso total habilitado para gestionar y previsualizar los cursos.
+              </span>
+            </div>
+          )
         )}
         {!loading && courses.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
             {courses.map((course) => {
               const requiredCycleOrder = course.cycle_id || 1;
               const userCycleOrder = userCycle?.order_index || 1;
-              const isAccessible = userCycleOrder >= requiredCycleOrder;
+              const hasCycleAccess = userCycleOrder >= requiredCycleOrder;
+              const isAccessible = isAdmin; // Por ahora, solo el admin puede acceder
+              const isBlocked = !isAdmin;
+
               return (
                 <div
                   key={course.id}
@@ -221,16 +247,21 @@ export default function CoursesLms({ token }) {
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
-                    border: `1px solid ${isAccessible ? 'var(--border-color)' : 'rgba(244,63,94,0.3)'}`,
+                    border: `1px solid ${isAccessible ? 'var(--border-color)' : 'rgba(239, 68, 68, 0.4)'}`,
                     transition: 'transform 0.2s, border-color 0.2s',
-                    opacity: isAccessible ? 1 : 0.7
+                    opacity: isAccessible ? 1 : 0.85
                   }}
                 >
                   <div style={{ position: 'relative', height: '170px', background: '#1e293b' }}>
                     <img
                       src={course.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop'}
                       alt={course.title}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        filter: isBlocked ? 'brightness(0.65)' : 'none'
+                      }}
                     />
                     <div style={{
                       position: 'absolute', top: '10px', right: '10px',
@@ -239,14 +270,14 @@ export default function CoursesLms({ token }) {
                     }}>
                       {course.modules_count || 0} Módulos • {course.lessons_count || 0} Aulas
                     </div>
-                    {!isAccessible && (
+                    {isBlocked && (
                       <div style={{
                         position: 'absolute', top: '10px', left: '10px',
-                        background: 'rgba(244,63,94,0.85)', backdropFilter: 'blur(4px)',
-                        padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 700, color: '#fff',
-                        display: 'flex', alignItems: 'center', gap: '0.3rem'
+                        background: 'rgba(239, 68, 68, 0.9)', backdropFilter: 'blur(4px)',
+                        padding: '0.35rem 0.7rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, color: '#fff',
+                        display: 'flex', alignItems: 'center', gap: '0.35rem', boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
                       }}>
-                        <Lock size={12} /> Requiere ciclo superior
+                        <Lock size={14} /> Bloqueado (Solo Admin)
                       </div>
                     )}
                   </div>
@@ -268,13 +299,20 @@ export default function CoursesLms({ token }) {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '0.5rem',
-                        opacity: isAccessible ? 1 : 0.5,
-                        cursor: isAccessible ? 'pointer' : 'not-allowed'
+                        opacity: isAccessible ? 1 : 0.65,
+                        cursor: isAccessible ? 'pointer' : 'not-allowed',
+                        background: isAccessible ? 'var(--accent-purple, #6366f1)' : 'rgba(239, 68, 68, 0.15)',
+                        border: isAccessible ? 'none' : '1px solid rgba(239, 68, 68, 0.4)',
+                        color: isAccessible ? '#fff' : '#fca5a5'
                       }}
                       onClick={() => isAccessible && handleSelectCourse(course.id)}
                       disabled={!isAccessible}
                     >
-                      {isAccessible ? <><PlayCircle size={18} /> Acceder al Curso</> : <><Lock size={18} /> Ciclo Insuficiente</>}
+                      {isAccessible ? (
+                        <><PlayCircle size={18} /> Acceder al Curso</>
+                      ) : (
+                        <><Lock size={18} /> Acceso Bloqueado (Solo Admin)</>
+                      )}
                     </button>
                   </div>
                 </div>

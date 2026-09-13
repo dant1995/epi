@@ -5,9 +5,11 @@ import Register from './components/Register';
 import UserDashboard from './components/UserDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import CoursesLms from './components/CoursesLms';
-import SupabaseModal from './components/SupabaseModal';
 import TermsModal from './components/TermsModal';
+import CompleteProfileModal from './components/CompleteProfileModal';
+import ProfileModal from './components/ProfileModal';
 import LandingPage from './components/LandingPage';
+import PaymentPending from './components/PaymentPending';
 import Footer from './components/Footer';
 import './styles/main.css';
 
@@ -23,8 +25,9 @@ export default function App() {
     if (path === '/vendas') return 'vendas';
     return token ? 'dashboard' : 'login';
   });
-  const [showSupabaseModal, setShowSupabaseModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showCompleteProfile, setShowCompleteProfile] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Sincronizar URL con estado
   useEffect(() => {
@@ -67,6 +70,9 @@ export default function App() {
       if (activeTab === 'login' || activeTab === 'register') {
         setActiveTab('dashboard');
       }
+      if (!currentUser.profile_completed) {
+        setShowCompleteProfile(true);
+      }
     } else {
       if (activeTab === 'dashboard' || activeTab === 'admin' || activeTab === 'courses') {
         setActiveTab('login');
@@ -80,6 +86,9 @@ export default function App() {
     localStorage.setItem('unilevel_token', newToken);
     localStorage.setItem('unilevel_user', JSON.stringify(user));
     setActiveTab('dashboard');
+    if (user && !user.profile_completed) {
+      setShowCompleteProfile(true);
+    }
   };
 
   const handleLogout = () => {
@@ -112,7 +121,7 @@ export default function App() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           onLogout={handleLogout}
-          onOpenSupabaseModal={() => setShowSupabaseModal(true)}
+          onOpenProfile={() => setShowProfileModal(true)}
         />
       )}
 
@@ -131,23 +140,49 @@ export default function App() {
               switchToRegister={() => setActiveTab('register')}
             />
           )
+        ) : currentUser?.account_status === 'pending' ? (
+          <PaymentPending
+            user={currentUser}
+            payment={currentUser?.payment}
+            onPaymentDone={handleLogout}
+          />
         ) : (
           activeTab === 'admin' ? (
             <AdminDashboard token={token} />
           ) : activeTab === 'courses' ? (
-            <CoursesLms token={token} />
+            <CoursesLms token={token} currentUser={currentUser} />
           ) : (
             <UserDashboard token={token} onLogout={handleLogout} onNavigateTab={setActiveTab} />
           )
         )}
       </main>
 
-      {showSupabaseModal && (
-        <SupabaseModal onClose={() => setShowSupabaseModal(false)} />
-      )}
-
       {showTermsModal && (
         <TermsModal onClose={() => setShowTermsModal(false)} />
+      )}
+
+      {showCompleteProfile && token && currentUser && (
+        <CompleteProfileModal
+          user={currentUser}
+          token={token}
+          onComplete={(updatedUser) => {
+            setCurrentUser(updatedUser);
+            localStorage.setItem('unilevel_user', JSON.stringify(updatedUser));
+            setShowCompleteProfile(false);
+          }}
+        />
+      )}
+
+      {showProfileModal && token && currentUser && (
+        <ProfileModal
+          user={currentUser}
+          token={token}
+          onClose={() => setShowProfileModal(false)}
+          onUpdate={(updatedUser) => {
+            setCurrentUser(updatedUser);
+            localStorage.setItem('unilevel_user', JSON.stringify(updatedUser));
+          }}
+        />
       )}
 
       {!isLandingPage && <Footer />}

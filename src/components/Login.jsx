@@ -53,6 +53,12 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
     setResetSuccess('');
     setResetLoading(true);
 
+    if (newPassword.length < 6) {
+      setResetError('La contraseña debe tener al menos 6 caracteres.');
+      setResetLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
@@ -240,7 +246,7 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Nueva Contraseña</label>
+                <label className="form-label">Nueva Contraseña (mín. 6 caracteres)</label>
                 <div className="input-wrapper">
                   <Lock className="input-icon" size={18} />
                   <input
@@ -249,6 +255,7 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
                     placeholder="Tu nueva contraseña..."
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
+                    minLength={6}
                     required
                   />
                 </div>

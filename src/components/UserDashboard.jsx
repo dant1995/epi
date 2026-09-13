@@ -314,6 +314,51 @@ export default function UserDashboard({ token, onLogout, onNavigateTab }) {
         )}
       </div>
 
+      {/* CARD DE GRÁFICO DA REDE */}
+      <div className="glass-card" style={{ marginBottom: '1.5rem' }}>
+        <div className="card-header">
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>📊 Resumo da Minha Rede</h3>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', padding: '0.5rem 0' }}>
+          <div style={{ textAlign: 'center', padding: '1rem', background: 'rgba(99,102,241,0.1)', borderRadius: 10 }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#818cf8' }}>
+              {epi_layers?.maestros?.count || 0}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Maestros</div>
+            <div style={{ marginTop: '0.3rem', height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 4 }}>
+              <div style={{ height: '100%', width: `${epi_layers?.maestros?.percent || 0}%`, background: '#818cf8', borderRadius: 4 }}></div>
+            </div>
+          </div>
+          <div style={{ textAlign: 'center', padding: '1rem', background: 'rgba(16,185,129,0.1)', borderRadius: 10 }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#34d399' }}>
+              {epi_layers?.lideres?.count || 0}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Líderes</div>
+            <div style={{ marginTop: '0.3rem', height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 4 }}>
+              <div style={{ height: '100%', width: `${epi_layers?.lideres?.percent || 0}%`, background: '#34d399', borderRadius: 4 }}></div>
+            </div>
+          </div>
+          <div style={{ textAlign: 'center', padding: '1rem', background: 'rgba(251,191,36,0.1)', borderRadius: 10 }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fbbf24' }}>
+              {epi_layers?.ayudantes?.count || 0}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Ayudantes</div>
+            <div style={{ marginTop: '0.3rem', height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 4 }}>
+              <div style={{ height: '100%', width: `${epi_layers?.ayudantes?.percent || 0}%`, background: '#fbbf24', borderRadius: 4 }}></div>
+            </div>
+          </div>
+          <div style={{ textAlign: 'center', padding: '1rem', background: 'rgba(236,72,153,0.1)', borderRadius: 10 }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#f472b6' }}>
+              ${walletData.total_earned?.toFixed(0) || '0'}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Total Ganado</div>
+            <div style={{ marginTop: '0.3rem', height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 4 }}>
+              <div style={{ height: '100%', width: `${Math.min((walletData.total_earned / 500) * 100, 100)}%`, background: '#f472b6', borderRadius: 4 }}></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* CARD DE PROGRESSÃO DE CICLOS E UPGRADE */}
       <div className="refund-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
