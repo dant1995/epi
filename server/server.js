@@ -1121,7 +1121,33 @@ app.get('/api/admin/cycles', [authenticateToken, requireAdmin], async (req, res)
   }
 });
 
-// 44. Atualizar ciclo (admin)
+// 43b. Atualizar todos os ciclos em massa (DEVE vir ANTES de /cycles/:id)
+app.put('/api/admin/cycles/bulk', [authenticateToken, requireAdmin], async (req, res) => {
+  try {
+    const { cycles } = req.body;
+    if (!Array.isArray(cycles)) return res.status(400).json({ error: 'Formato inválido.' });
+
+    for (const c of cycles) {
+      if (!c.id) continue;
+      const updates = {};
+      if (c.name !== undefined) updates.name = c.name;
+      if (c.display_name !== undefined) updates.display_name = c.display_name;
+      if (c.price !== undefined) updates.price = c.price;
+      if (c.bonus_per_referral !== undefined) updates.bonus_per_referral = c.bonus_per_referral;
+      if (c.refund_amount !== undefined) updates.refund_amount = c.refund_amount;
+      if (c.description !== undefined) updates.description = c.description;
+      if (Object.keys(updates).length > 0) {
+        await supabase.from('cycles').update(updates).eq('id', c.id);
+      }
+    }
+    res.json({ message: 'Configurações atualizadas com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao atualizar configurações:', error);
+    res.status(500).json({ error: 'Erro ao atualizar configurações.' });
+  }
+});
+
+// 44. Atualizar ciclo individual (admin)
 app.put('/api/admin/cycles/:id', [authenticateToken, requireAdmin], async (req, res) => {
   try {
     const cycleId = parseInt(req.params.id, 10);
@@ -1376,34 +1402,6 @@ app.post('/api/admin/broadcast', [authenticateToken, requireAdmin], async (req, 
   } catch (error) {
     console.error('Erro no broadcast:', error);
     res.status(500).json({ error: 'Erro ao enviar emails: ' + error.message });
-  }
-});
-
-// ----------------------------------------------------
-// ADMIN: CONFIGURAÇÕES GLOBAIS (CICLOS)
-// ----------------------------------------------------
-app.put('/api/admin/cycles/bulk', [authenticateToken, requireAdmin], async (req, res) => {
-  try {
-    const { cycles } = req.body;
-    if (!Array.isArray(cycles)) return res.status(400).json({ error: 'Formato inválido.' });
-
-    for (const c of cycles) {
-      if (!c.id) continue;
-      const updates = {};
-      if (c.name !== undefined) updates.name = c.name;
-      if (c.display_name !== undefined) updates.display_name = c.display_name;
-      if (c.price !== undefined) updates.price = c.price;
-      if (c.bonus_per_referral !== undefined) updates.bonus_per_referral = c.bonus_per_referral;
-      if (c.refund_amount !== undefined) updates.refund_amount = c.refund_amount;
-      if (c.description !== undefined) updates.description = c.description;
-      if (Object.keys(updates).length > 0) {
-        await supabase.from('cycles').update(updates).eq('id', c.id);
-      }
-    }
-    res.json({ message: 'Configurações atualizadas com sucesso!' });
-  } catch (error) {
-    console.error('Erro ao atualizar configurações:', error);
-    res.status(500).json({ error: 'Erro ao atualizar configurações.' });
   }
 });
 
