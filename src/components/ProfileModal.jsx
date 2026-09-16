@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Mail, Phone, Calendar, Globe, FileText, Shield, Copy, Check, Edit3, Save, Loader2, AlertCircle, MapPin } from 'lucide-react';
+import { X, User, Mail, Phone, Calendar, Globe, FileText, Shield, Copy, Check, Edit3, Save, Loader2, AlertCircle, MapPin, Camera } from 'lucide-react';
 
 const countries = [
   'Argentina', 'Bolivia', 'Brasil', 'Chile', 'Colombia', 'Costa Rica', 'Cuba',
@@ -19,6 +19,8 @@ export default function ProfileModal({ user, token, onClose, onUpdate }) {
   const [dateOfBirth, setDateOfBirth] = useState(user?.date_of_birth || '');
   const [country, setCountry] = useState(user?.country || '');
   const [shippingAddress, setShippingAddress] = useState(user?.shipping_address || '');
+  const [docPhoto, setDocPhoto] = useState(null);
+  const [docPreview, setDocPreview] = useState(user?.document_photo_url || '');
 
   const handleCopy = () => {
     navigator.clipboard.writeText(user.referral_code);
@@ -33,19 +35,39 @@ export default function ProfileModal({ user, token, onClose, onUpdate }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setDocPhoto(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setDocPreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSave = async () => {
     setError('');
     setSuccess('');
     setLoading(true);
 
     try {
+      let documentPhotoUrl = docPreview || '';
+
+      if (docPhoto) {
+        const reader = new FileReader();
+        documentPhotoUrl = await new Promise((resolve) => {
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(docPhoto);
+        });
+      }
+
       const res = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ phone, date_of_birth: dateOfBirth, country, shipping_address: shippingAddress })
+        body: JSON.stringify({ phone, date_of_birth: dateOfBirth, country, shipping_address: shippingAddress, document_photo_url: documentPhotoUrl })
       });
 
       const data = await res.json();
@@ -89,13 +111,49 @@ export default function ProfileModal({ user, token, onClose, onUpdate }) {
             width: '72px', height: '72px', borderRadius: '50%',
             background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 0.75rem', fontSize: '1.8rem', fontWeight: 800, color: '#fff'
+            margin: '0 auto 0.75rem', fontSize: '1.8rem', fontWeight: 800, color: '#fff',
+            position: 'relative', overflow: 'hidden'
           }}>
-            {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+            {docPreview ? (
+              <img src={docPreview} alt="Foto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              user.name ? user.name.charAt(0).toUpperCase() : 'U'
+            )}
           </div>
           <h3 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>{user.name}</h3>
           <span style={{ fontSize: '0.78rem', color: '#64748b' }}>{user.email}</span>
         </div>
+
+        {/* Photo Upload */}
+        {editing && (
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#94a3b8', fontSize: '0.82rem', fontWeight: 600, marginBottom: '0.4rem' }}>
+              <Camera size={14} /> Foto de Perfil
+            </label>
+            <div style={{
+              border: '2px dashed rgba(255,255,255,0.12)', borderRadius: '12px',
+              padding: '1rem', textAlign: 'center', cursor: 'pointer',
+              background: 'rgba(255,255,255,0.02)', position: 'relative'
+            }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
+              />
+              {docPreview ? (
+                <img src={docPreview} alt="Vista previa" style={{ maxWidth: '100%', maxHeight: '120px', borderRadius: '8px' }} />
+              ) : (
+                <>
+                  <Camera size={28} style={{ color: '#64748b', marginBottom: '0.4rem' }} />
+                  <p style={{ color: '#64748b', fontSize: '0.8rem', margin: 0 }}>
+                    Click para subir una imagen
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {error && (
           <div style={{

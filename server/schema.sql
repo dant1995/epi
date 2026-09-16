@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     date_of_birth DATE,
     country VARCHAR(100),
     document_photo_url TEXT,
+    profile_photo_url TEXT,
     profile_completed BOOLEAN DEFAULT FALSE,
     shipping_address TEXT,
     account_status VARCHAR(20) DEFAULT 'active',
@@ -41,6 +42,7 @@ ALTER TABLE public.users ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS date_of_birth DATE;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS country VARCHAR(100);
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS document_photo_url TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_photo_url TEXT;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS profile_completed BOOLEAN DEFAULT FALSE;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS shipping_address TEXT;
 

@@ -193,7 +193,7 @@ export default function CompleteProfileModal({ user, token, onComplete }) {
 
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.82rem', fontWeight: 600, marginBottom: '0.4rem' }}>
-                Foto del Documento (DNI, Pasaporte, etc.)
+                Foto del Documento (DNI, Pasaporte, etc.) <span style={{ color: '#64748b', fontWeight: 'normal' }}>(Opcional)</span>
               </label>
               <div style={{
                 border: '2px dashed rgba(255,255,255,0.12)', borderRadius: '12px',

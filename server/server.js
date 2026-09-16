@@ -332,7 +332,7 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // 3. Atualização de Perfil do Usuário
-app.put('/api/user/profile', [authenticateToken, requireActiveAccount], async (req, res) => {
+app.put('/api/user/profile', [authenticateToken], async (req, res) => {
   try {
     const { phone, date_of_birth, country, document_photo_url, shipping_address } = req.body;
     const userId = req.user.id;

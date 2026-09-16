@@ -91,9 +91,6 @@ export default function TermsModal({ onClose }) {
             <p style={{ marginBottom: '0.5rem' }}>
               Al completar la <strong>1ª capa de 3 Maestros (indicados directos)</strong> en el Ciclo Bronze, el usuario recibe un <strong>reembolso (cashback) de $US 60.00</strong> que se acredita automáticamente en su billetera digital.
             </p>
-            <p>
-              El <strong>Ciclo Bronze</strong> otorga un <strong>bono de $US 20.00 por cada indicado directo</strong> que se registre en la matriz. Los demás ciclos (Plata a Diamante) no generan bonificaciones adicionales por indicación directa; su valor está en el acceso a productos de mayor nivel.
-            </p>
           </section>
 
           <section style={{ marginBottom: '1.5rem' }}>
