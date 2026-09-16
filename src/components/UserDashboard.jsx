@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, UserPlus, Layers, Copy, Check, Link, Network, List, RefreshCw, ShieldCheck, DollarSign, Award, ArrowUpRight, Wallet, CreditCard, Send, Clock, CheckCircle2, AlertCircle, X, GraduationCap, BookOpen } from 'lucide-react';
 import NetworkTree from './NetworkTree';
 
-export default function UserDashboard({ token, onLogout, onNavigateTab }) {
+export default function UserDashboard({ token, onLogout, onNavigateTab, onOpenProfile }) {
   const [data, setData] = useState(null);
   const [treeData, setTreeData] = useState(null);
   const [walletData, setWalletData] = useState({ balance: 0, pending_balance: 0, total_earned: 0, withdrawals: [] });
@@ -125,6 +125,10 @@ export default function UserDashboard({ token, onLogout, onNavigateTab }) {
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const handleOpenProfile = () => {
+    if (onOpenProfile) onOpenProfile();
+  };
+
   const getCycleBadge = (cycleName) => {
     const name = cycleName || 'Bronze';
     if (name.includes('Bronze')) return <span className="cycle-badge cycle-bronce"><Award size={14} /> Socio Bronze</span>;
@@ -142,6 +146,31 @@ export default function UserDashboard({ token, onLogout, onNavigateTab }) {
 
   return (
     <div>
+      {/* BANNER - PERFIL INCOMPLETO */}
+      {!user.profile_completed && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '1rem',
+          background: 'linear-gradient(135deg, rgba(251,191,36,0.12), rgba(245,158,11,0.08))',
+          border: '1px solid rgba(251,191,36,0.3)', borderRadius: '14px',
+          padding: '1rem 1.25rem', marginBottom: '1.25rem'
+        }}>
+          <AlertCircle size={22} style={{ color: '#fbbf24', flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, color: '#fbbf24', fontSize: '0.9rem' }}>Perfil incompleto</div>
+            <div style={{ color: '#94a3b8', fontSize: '0.82rem', marginTop: '0.15rem' }}>
+              Completá tu perfil para acceder a todas las funcionalidades.
+            </div>
+          </div>
+          <button onClick={handleOpenProfile} style={{
+            padding: '0.5rem 1rem', borderRadius: '10px', border: 'none',
+            background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff',
+            fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap'
+          }}>
+            Completar
+          </button>
+        </div>
+      )}
+
       {/* BANNER DO LINK DE INDICAÇÃO & CICLO CORPORATIVO */}
       <div className="referral-banner">
         <div className="referral-info">

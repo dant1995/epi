@@ -70,9 +70,6 @@ export default function App() {
       if (activeTab === 'login' || activeTab === 'register') {
         setActiveTab('dashboard');
       }
-      if (!currentUser.profile_completed) {
-        setShowCompleteProfile(true);
-      }
     } else {
       if (activeTab === 'dashboard' || activeTab === 'admin' || activeTab === 'courses') {
         setActiveTab('login');
@@ -86,9 +83,6 @@ export default function App() {
     localStorage.setItem('unilevel_token', newToken);
     localStorage.setItem('unilevel_user', JSON.stringify(user));
     setActiveTab('dashboard');
-    if (user && !user.profile_completed) {
-      setShowCompleteProfile(true);
-    }
   };
 
   const handleLogout = () => {
@@ -152,7 +146,7 @@ export default function App() {
           ) : activeTab === 'courses' ? (
             <CoursesLms token={token} currentUser={currentUser} />
           ) : (
-            <UserDashboard token={token} onLogout={handleLogout} onNavigateTab={setActiveTab} />
+            <UserDashboard token={token} onLogout={handleLogout} onNavigateTab={setActiveTab} onOpenProfile={() => setShowProfileModal(true)} />
           )
         )}
       </main>
