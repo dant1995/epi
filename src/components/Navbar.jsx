@@ -55,8 +55,12 @@ export default function Navbar({ currentUser, activeTab, setActiveTab, onLogout,
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
             onMouseLeave={e => e.currentTarget.style.background = 'none'}
           >
-            <div className="user-avatar">
-              {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+            <div className="user-avatar" style={{ overflow: 'hidden' }}>
+              {currentUser.document_photo_url ? (
+                <img src={currentUser.document_photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'
+              )}
             </div>
             <div style={{ lineHeight: 1.2 }}>
               <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{currentUser.name}</div>

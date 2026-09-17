@@ -346,7 +346,7 @@ async function getLspcMatrix(userId) {
     // Camada 1: Maestros (filhos diretos no placement_id) ordenados por position
     const { data: layer1, error: err1 } = await supabase
       .from('users')
-      .select('id, name, email, referral_code, sponsor_id, placement_id, position, created_at, fee_refunded, current_cycle')
+      .select('id, name, email, referral_code, sponsor_id, placement_id, position, created_at, fee_refunded, current_cycle, document_photo_url')
       .eq('placement_id', userId)
       .order('position', { ascending: true });
 
@@ -362,7 +362,7 @@ async function getLspcMatrix(userId) {
     const layer1Ids = layer1.map(u => u.id);
     const { data: layer2, error: err2 } = await supabase
       .from('users')
-      .select('id, name, email, referral_code, sponsor_id, placement_id, position, created_at, fee_refunded, current_cycle')
+      .select('id, name, email, referral_code, sponsor_id, placement_id, position, created_at, fee_refunded, current_cycle, document_photo_url')
       .in('placement_id', layer1Ids)
       .order('position', { ascending: true });
 
@@ -373,7 +373,7 @@ async function getLspcMatrix(userId) {
       const layer2Ids = layer2.map(u => u.id);
       const { data: layer3, error: err3 } = await supabase
         .from('users')
-        .select('id, name, email, referral_code, sponsor_id, placement_id, position, created_at, fee_refunded, current_cycle')
+        .select('id, name, email, referral_code, sponsor_id, placement_id, position, created_at, fee_refunded, current_cycle, document_photo_url')
         .in('placement_id', layer2Ids)
         .order('position', { ascending: true });
 
@@ -395,7 +395,7 @@ async function getLspcMatrix(userId) {
 async function getLspcTreeStructure(rootUserId) {
   const { data: rootUser, error } = await supabase
     .from('users')
-    .select('id, name, email, referral_code, role, fee_refunded, current_cycle, sponsor_id, placement_id, position')
+    .select('id, name, email, referral_code, role, fee_refunded, current_cycle, sponsor_id, placement_id, position, document_photo_url')
     .eq('id', rootUserId)
     .single();
 

@@ -69,8 +69,12 @@ export default function NetworkTree({ treeData }) {
         <div className="organogram-card" onClick={() => setSelectedMember(node)}>
           <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
             <div className="tree-user-info" style={{ width: '100%' }}>
-              <div className="tree-avatar">
-                {node.name ? node.name.charAt(0).toUpperCase() : 'U'}
+              <div className="tree-avatar" style={{ overflow: 'hidden' }}>
+                {node.document_photo_url ? (
+                  <img src={node.document_photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  node.name ? node.name.charAt(0).toUpperCase() : 'U'
+                )}
               </div>
               <div className="tree-user-details" style={{ flex: 1 }}>
                 <h4>{node.name}</h4>
@@ -137,8 +141,12 @@ export default function NetworkTree({ treeData }) {
         <div className="organogram-root-box" style={{ textAlign: 'center' }}>
           <div className="organogram-card organogram-card-root" onClick={() => setSelectedMember(activeNode)} style={{ textAlign: 'center' }}>
             <div className="tree-user-info" style={{ justifyContent: 'center' }}>
-              <div className="tree-avatar" style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent-cyan))', width: 36, height: 36, fontSize: '0.95rem' }}>
-                {activeNode.name ? activeNode.name.charAt(0).toUpperCase() : 'U'}
+              <div className="tree-avatar" style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent-cyan))', width: 36, height: 36, fontSize: '0.95rem', overflow: 'hidden' }}>
+                {activeNode.document_photo_url ? (
+                  <img src={activeNode.document_photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  activeNode.name ? activeNode.name.charAt(0).toUpperCase() : 'U'
+                )}
               </div>
               <div className="tree-user-details" style={{ textAlign: 'left' }}>
                 <h4 style={{ fontSize: '0.85rem' }}>
@@ -195,8 +203,12 @@ export default function NetworkTree({ treeData }) {
             </div>
 
             <div className="tree-user-info" style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '1rem', borderRadius: '12px' }}>
-              <div className="tree-avatar" style={{ width: 48, height: 48, fontSize: '1.2rem' }}>
-                {selectedMember.name ? selectedMember.name.charAt(0).toUpperCase() : 'U'}
+              <div className="tree-avatar" style={{ width: 48, height: 48, fontSize: '1.2rem', overflow: 'hidden' }}>
+                {selectedMember.document_photo_url ? (
+                  <img src={selectedMember.document_photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  selectedMember.name ? selectedMember.name.charAt(0).toUpperCase() : 'U'
+                )}
               </div>
               <div className="tree-user-details">
                 <h4 style={{ fontSize: '1.1rem' }}>{selectedMember.name}</h4>
