@@ -36,7 +36,7 @@ export default function AdminMetrics({ token }) {
       if (metricsRes.ok) {
         setMetrics(JSON.parse(metricsText));
       } else {
-        setError(`Erro ao carregar métricas (${metricsRes.status}): ${metricsText.substring(0, 100)}`);
+        setError(`Error al cargar métricas (${metricsRes.status}): ${metricsText.substring(0, 100)}`);
       }
 
       if (commRes.ok) {
@@ -48,8 +48,8 @@ export default function AdminMetrics({ token }) {
         setSettingsCycles(d.cycles || []);
       }
     } catch (err) {
-      console.error('Erro ao carregar métricas:', err);
-      setError('Erro de conexão: ' + err.message);
+      console.error('Error al cargar métricas:', err);
+      setError('Error de conexión: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -68,10 +68,10 @@ export default function AdminMetrics({ token }) {
         body: JSON.stringify({ subject: broadcastSubject, message: broadcastMessage })
       });
       const data = await res.json();
-      setBroadcastResult(data.message || data.error || 'Erro desconhecido');
+      setBroadcastResult(data.message || data.error || 'Error desconocido');
       if (res.ok) { setBroadcastSubject(''); setBroadcastMessage(''); }
     } catch (err) {
-      setBroadcastResult('Erro de conexão: ' + err.message);
+      setBroadcastResult('Error de conexión: ' + err.message);
     } finally {
       setBroadcastLoading(false);
     }
@@ -89,14 +89,14 @@ export default function AdminMetrics({ token }) {
       const data = await res.json();
       setSettingsResult(data.message || data.error);
       if (res.ok) fetchData();
-    } catch (err) { setSettingsResult('Erro ao salvar: ' + err.message); }
+    } catch (err) { setSettingsResult('Error al guardar: ' + err.message); }
     finally { setSettingsLoading(false); }
   };
 
   const handleBackup = async () => {
     try {
       const res = await fetch('/api/admin/backup', { headers: { Authorization: `Bearer ${token}` } });
-      if (!res.ok) { alert('Erro ao gerar backup: ' + res.status); return; }
+      if (!res.ok) { alert('Error al generar backup: ' + res.status); return; }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -107,14 +107,14 @@ export default function AdminMetrics({ token }) {
       window.URL.revokeObjectURL(url);
       a.remove();
     } catch (err) {
-      alert('Erro ao baixar backup: ' + err.message);
+      alert('Error al descargar backup: ' + err.message);
     }
   };
 
   if (loading) return (
     <div className="glass-card" style={{ padding: '2rem', textAlign: 'center' }}>
       <RefreshCw size={28} className="animate-spin" style={{ color: '#818cf8', margin: '0 auto', display: 'block', marginBottom: '0.75rem' }} />
-      <p style={{ color: '#e2e8f0', fontWeight: 600 }}>Carregando métricas...</p>
+      <p style={{ color: '#e2e8f0', fontWeight: 600 }}>Cargando métricas...</p>
     </div>
   );
 
@@ -122,20 +122,20 @@ export default function AdminMetrics({ token }) {
     <div className="glass-card" style={{ padding: '1.5rem', borderLeft: '4px solid #f43f5e' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
         <AlertTriangle size={20} style={{ color: '#f43f5e' }} />
-        <h4 style={{ color: '#f43f5e', fontWeight: 700 }}>Erro ao carregar métricas</h4>
+        <h4 style={{ color: '#f43f5e', fontWeight: 700 }}>Error al cargar métricas</h4>
       </div>
       <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>{error}</p>
       <button className="nav-btn nav-btn-primary" onClick={fetchData} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-        <RefreshCw size={16} /> Tentar Novamente
+        <RefreshCw size={16} /> Intentar de Nuevo
       </button>
     </div>
   );
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: <TrendingUp size={16} /> },
-    { id: 'commissions', label: 'Comissões', icon: <Gift size={16} /> },
-    { id: 'broadcast', label: 'Email Massa', icon: <Mail size={16} /> },
-    { id: 'settings', label: 'Configurações', icon: <Settings size={16} /> },
+    { id: 'commissions', label: 'Comisiones', icon: <Gift size={16} /> },
+    { id: 'broadcast', label: 'Email Masivo', icon: <Mail size={16} /> },
+    { id: 'settings', label: 'Configuración', icon: <Settings size={16} /> },
     { id: 'backup', label: 'Backup', icon: <Download size={16} /> }
   ];
 
@@ -161,34 +161,34 @@ export default function AdminMetrics({ token }) {
               <div className="stat-subtext">{metrics.overview.activeUsers} activos / {metrics.overview.pendingUsers} pendientes</div>
             </div>
             <div className="stat-card stat-card-emerald">
-              <div className="stat-header"><span className="stat-title">Receita Total</span><div className="stat-icon stat-icon-emerald"><DollarSign size={20} /></div></div>
+              <div className="stat-header"><span className="stat-title">Ingresos Totales</span><div className="stat-icon stat-icon-emerald"><DollarSign size={20} /></div></div>
               <div className="stat-value">$US {metrics.financial.totalRevenue}</div>
-              <div className="stat-subtext">Comissões pagas: ${metrics.financial.totalCommissions}</div>
+              <div className="stat-subtext">Comisiones pagadas: ${metrics.financial.totalCommissions}</div>
             </div>
             <div className="stat-card stat-card-purple" style={{ borderLeftColor: '#fbbf24' }}>
-              <div className="stat-header"><span className="stat-title">Saques Pendentes</span><div className="stat-icon" style={{ background: 'rgba(251,191,36,0.2)', color: '#fbbf24' }}><DollarSign size={20} /></div></div>
+              <div className="stat-header"><span className="stat-title">Retiros Pendientes</span><div className="stat-icon" style={{ background: 'rgba(251,191,36,0.2)', color: '#fbbf24' }}><DollarSign size={20} /></div></div>
               <div className="stat-value" style={{ color: '#fbbf24' }}>$US {metrics.financial.pendingWithdrawals}</div>
-              <div className="stat-subtext">Reembolsos pagos: ${metrics.financial.totalRefunds}</div>
+              <div className="stat-subtext">Reembolsos pagados: ${metrics.financial.totalRefunds}</div>
             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <div className="glass-card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ color: '#fff', fontSize: '0.95rem', marginBottom: '1rem', fontWeight: 700 }}>Crescimento Mensal</h3>
+              <h3 style={{ color: '#fff', fontSize: '0.95rem', marginBottom: '1rem', fontWeight: 700 }}>Crecimiento Mensual</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={metrics.monthlyGrowth}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                   <XAxis dataKey="month" tick={{ fill: '#94a3b8', fontSize: 12 }} />
                   <YAxis tick={{ fill: '#94a3b8', fontSize: 12 }} />
                   <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, color: '#fff' }} />
-                  <Bar dataKey="newUsers" name="Novos Afiliados" fill="#818cf8" radius={[4,4,0,0]} />
-                  <Bar dataKey="revenue" name="Receita ($)" fill="#34d399" radius={[4,4,0,0]} />
+                  <Bar dataKey="newUsers" name="Nuevos Afiliados" fill="#818cf8" radius={[4,4,0,0]} />
+                  <Bar dataKey="revenue" name="Ingresos ($)" fill="#34d399" radius={[4,4,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
             <div className="glass-card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ color: '#fff', fontSize: '0.95rem', marginBottom: '1rem', fontWeight: 700 }}>Distribuição por Ciclo</h3>
+              <h3 style={{ color: '#fff', fontSize: '0.95rem', marginBottom: '1rem', fontWeight: 700 }}>Distribución por Ciclo</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie data={metrics.cycleDistribution} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, count }) => `${name}: ${count}`}>
@@ -205,9 +205,9 @@ export default function AdminMetrics({ token }) {
 
       {activeTab === 'dashboard' && !metrics && !loading && (
         <div className="glass-card" style={{ padding: '2rem', textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-muted)' }}>Nenhum dado de métricas disponível.</p>
+          <p style={{ color: 'var(--text-muted)' }}>Ningún dato de métricas disponible.</p>
           <button className="nav-btn nav-btn-primary" onClick={fetchData} style={{ marginTop: '1rem', cursor: 'pointer' }}>
-            <RefreshCw size={16} /> Recarregar
+            <RefreshCw size={16} /> Recargar
           </button>
         </div>
       )}
@@ -215,14 +215,14 @@ export default function AdminMetrics({ token }) {
       {/* COMISSÕES */}
       {activeTab === 'commissions' && (
         <div className="glass-card" style={{ padding: '1.5rem' }}>
-          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem', fontWeight: 700 }}>Relatório de Comissões por Afiliado</h3>
+          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem', fontWeight: 700 }}>Informe de Comisiones por Afiliado</h3>
           {commissions.length === 0 ? (
-            <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>Nenhum dado de comissões disponível.</p>
+            <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>Ningún dato de comisiones disponible.</p>
           ) : (
             <div className="table-responsive">
               <table className="custom-table">
                 <thead>
-                  <tr><th>#</th><th>Nome</th><th>Email</th><th>Indicações</th><th>Total Ganho</th></tr>
+                  <tr><th>#</th><th>Nombre</th><th>Email</th><th>Referidos</th><th>Total Ganado</th></tr>
                 </thead>
                 <tbody>
                   {commissions.map((c, i) => (
@@ -244,11 +244,11 @@ export default function AdminMetrics({ token }) {
       {/* BROADCAST */}
       {activeTab === 'broadcast' && (
         <div className="glass-card" style={{ padding: '1.5rem', maxWidth: 600 }}>
-          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '0.5rem', fontWeight: 700 }}>Envio de Email em Massa</h3>
+          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '0.5rem', fontWeight: 700 }}>Envío de Email Masivo</h3>
           <div style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', borderRadius: 8, padding: '0.75rem 1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <AlertTriangle size={16} style={{ color: '#fbbf24', flexShrink: 0 }} />
             <span style={{ color: '#fbbf24', fontSize: '0.82rem' }}>
-              Requer SMTP configurado no <code>.env</code> (SMTP_USER, SMTP_PASS). Se não estiver configurado, os emails não serão enviados.
+              Requiere SMTP configurado en <code>.env</code> (SMTP_USER, SMTP_PASS). Si no está configurado, los emails no serán enviados.
             </span>
           </div>
           {broadcastResult && (
@@ -256,15 +256,15 @@ export default function AdminMetrics({ token }) {
           )}
           <form onSubmit={handleBroadcast}>
             <div className="form-group">
-              <label className="form-label">Assunto</label>
-              <input type="text" className="form-input" value={broadcastSubject} onChange={e => setBroadcastSubject(e.target.value)} required placeholder="Ex: Novidade importante!" />
+              <label className="form-label">Asunto</label>
+              <input type="text" className="form-input" value={broadcastSubject} onChange={e => setBroadcastSubject(e.target.value)} required placeholder="Ex: ¡Novedad importante!" />
             </div>
             <div className="form-group">
-              <label className="form-label">Mensagem</label>
-              <textarea className="form-input" rows={6} value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)} required placeholder="Escreva sua mensagem aqui..." />
+              <label className="form-label">Mensaje</label>
+              <textarea className="form-input" rows={6} value={broadcastMessage} onChange={e => setBroadcastMessage(e.target.value)} required placeholder="Escribe tu mensaje aquí..." />
             </div>
             <button type="submit" className="nav-btn nav-btn-primary" disabled={broadcastLoading} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Send size={16} /> {broadcastLoading ? 'Enviando...' : 'Enviar para todos'}
+              <Send size={16} /> {broadcastLoading ? 'Enviando...' : 'Enviar a todos'}
             </button>
           </form>
         </div>
@@ -273,8 +273,8 @@ export default function AdminMetrics({ token }) {
       {/* CONFIGURAÇÕES */}
       {activeTab === 'settings' && (
         <div className="glass-card" style={{ padding: '1.5rem' }}>
-          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem', fontWeight: 700 }}>Configurações dos Ciclos</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>Altere preços, bônus e reembolsos de todos os ciclos.</p>
+          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem', fontWeight: 700 }}>Configuración de los Ciclos</h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>Modifique precios, bonos y reembolsos de todos los ciclos.</p>
           {settingsResult && (
             <div className="sponsor-badge sponsor-badge-valid" style={{ marginBottom: '1rem' }}><CheckCircle2 size={16} /><span>{settingsResult}</span></div>
           )}
@@ -287,11 +287,11 @@ export default function AdminMetrics({ token }) {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
                   <div>
-                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Preço ($)</label>
+                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Precio ($)</label>
                     <input type="number" step="0.01" className="form-input" value={c.price} onChange={e => { const v = [...settingsCycles]; v[i] = { ...v[i], price: parseFloat(e.target.value) || 0 }; setSettingsCycles(v); }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Bônus/Indicação ($)</label>
+                    <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Bono/Referido ($)</label>
                     <input type="number" step="0.01" className="form-input" value={c.bonus_per_referral} onChange={e => { const v = [...settingsCycles]; v[i] = { ...v[i], bonus_per_referral: parseFloat(e.target.value) || 0 }; setSettingsCycles(v); }} />
                   </div>
                   <div>
@@ -303,7 +303,7 @@ export default function AdminMetrics({ token }) {
             ))}
           </div>
           <button className="nav-btn nav-btn-primary" onClick={handleSaveSettings} disabled={settingsLoading} style={{ marginTop: '1rem', cursor: 'pointer' }}>
-            {settingsLoading ? 'Guardando...' : 'Guardar Configurações'}
+            {settingsLoading ? 'Guardando...' : 'Guardar Configuración'}
           </button>
         </div>
       )}
@@ -311,12 +311,12 @@ export default function AdminMetrics({ token }) {
       {/* BACKUP */}
       {activeTab === 'backup' && (
         <div className="glass-card" style={{ padding: '1.5rem', maxWidth: 500 }}>
-          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem', fontWeight: 700 }}>Backup / Exportação de Dados</h3>
+          <h3 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1rem', fontWeight: 700 }}>Backup / Exportación de Datos</h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-            Exporta todos os dados do banco em formato JSON. Inclui: usuários, transações, saques, ciclos, cursos, produtos, envios e carteiras.
+            Exporta todos los datos de la base en formato JSON. Incluye: usuarios, transacciones, retiros, ciclos, cursos, productos, envíos y billeteras.
           </p>
           <button className="nav-btn nav-btn-primary" onClick={handleBackup} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Download size={18} /> Baixar Backup JSON
+            <Download size={18} /> Descargar Backup JSON
           </button>
         </div>
       )}

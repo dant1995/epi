@@ -250,7 +250,7 @@ export default function ProfileModal({ user, token, onClose, onUpdate }) {
                 Dirección de Envío {shippingAddress && <span style={{ color: '#34d399' }}>✓ Registrada</span>}
               </div>
               <div style={{ fontSize: '0.78rem', color: '#fbbf24', marginBottom: '0.3rem' }}>
-                Necesaria para recibir productos físicos (ciclos Ouro+)
+                Necesaria para recibir productos físicos (ciclos Oro+)
               </div>
               {editing ? (
                 <textarea

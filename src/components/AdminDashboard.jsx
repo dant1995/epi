@@ -681,14 +681,14 @@ export default function AdminDashboard({ token }) {
         </div>
       )}
 
-      {/* PAINEL DE MÉTRICAS AVANÇADAS */}
+      {/* PAINEL DE MÉTRICAS AVANZADAS */}
       <div style={{ marginBottom: '1.5rem' }}>
         <button 
           className="nav-btn nav-btn-ghost" 
           onClick={() => setShowMetrics(!showMetrics)} 
           style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: showMetrics ? '1rem' : 0 }}
         >
-          <BarChart3 size={18} /> {showMetrics ? 'Ocultar Métricas Avançadas' : 'Ver Métricas Avançadas'}
+          <BarChart3 size={18} /> {showMetrics ? 'Ocultar Métricas Avanzadas' : 'Ver Métricas Avanzadas'}
         </button>
         {showMetrics && <AdminMetrics token={token} />}
       </div>
@@ -1108,7 +1108,7 @@ export default function AdminDashboard({ token }) {
           </div>
         </div>
         {adminShipments.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Ningún envío registrado. Los envíos se crean automáticamente al alcanzar el ciclo Ouro+.</div>
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Ningún envío registrado. Los envíos se crean automáticamente al alcanzar el ciclo Oro+.</div>
         ) : (
           <div className="table-responsive">
             <table className="custom-table">
@@ -1190,7 +1190,7 @@ export default function AdminDashboard({ token }) {
 
         {adminProducts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-            Ningún producto físico registrado. Los productos se crean para los ciclos con producto físico (Ouro, Platino, Diamante).
+            Ningún producto físico registrado. Los productos se crean para los ciclos con producto físico (Oro, Platino, Diamante).
           </div>
         ) : (
           <div className="table-responsive">
@@ -1353,7 +1353,7 @@ export default function AdminDashboard({ token }) {
                   onChange={(e) => setAddForm({ ...addForm, targetLeg: e.target.value })}
                   required
                 >
-                  <option value="auto">🤖 Automático (Derrame Secuencial)</option>
+                  <option value="auto">🤖 Automático (Desbordamiento Secuencial)</option>
                   <option value="left">👈 Posición 1 — Pierna Izquierda</option>
                   <option value="center">🎯 Posición 2 — Pierna Central</option>
                   <option value="right">👉 Posición 3 — Pierna Derecha</option>
@@ -1639,7 +1639,7 @@ export default function AdminDashboard({ token }) {
                         background: log.action.includes('activated') ? 'rgba(16,185,129,0.15)' : log.action.includes('deactivated') ? 'rgba(244,63,94,0.15)' : 'rgba(99,102,241,0.15)',
                         color: log.action.includes('activated') ? '#34d399' : log.action.includes('deactivated') ? '#f43f5e' : '#818cf8'
                       }}>
-                        {log.action === 'role_change' ? '🔄 Rol' : log.action === 'password_reset' ? '🔑 Senha' : log.action === 'account_activated' ? '✅ Ativado' : '❌ Desativado'}
+                        {log.action === 'role_change' ? '🔄 Rol' : log.action === 'password_reset' ? '🔑 Contraseña' : log.action === 'account_activated' ? '✅ Activado' : '❌ Desactivado'}
                       </span>
                     </td>
                     <td style={{ fontSize: '0.85rem' }}>{log.target_user_name || '—'}</td>

@@ -42,7 +42,7 @@ export default function TermsModal({ onClose }) {
               <Award size={18} style={{ color: '#fbbf24' }} /> 1. Descripción de los Ciclos Progresivos
             </h3>
             <p style={{ marginBottom: '0.75rem' }}>
-              La plataforma EPI ofrece un sistema de marketing multinivel basado en una <strong>Matriz Forzada Cerrada 3×3</strong> con <strong>5 ciclos progressivos</strong>. Cada ciclo otorga acceso a productos digitales, físicos o ambos, según el nivel adquirido.
+              La plataforma EPI ofrece un sistema de marketing multinivel basado en una <strong>Matriz Forzada Cerrada 3×3</strong> con <strong>5 ciclos progresivos</strong>. Cada ciclo otorga acceso a productos digitales, físicos o ambos, según el nivel adquirido.
             </p>
             <div style={{ background: 'rgba(15,23,42,0.6)', borderRadius: '10px', padding: '1rem', border: '1px solid rgba(255,255,255,0.06)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>

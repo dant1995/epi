@@ -22,7 +22,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState(() => {
     const path = window.location.pathname;
-    if (path === '/vendas') return 'vendas';
+    if (path === '/ventas') return 'ventas';
     return token ? 'dashboard' : 'login';
   });
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -32,9 +32,9 @@ export default function App() {
   // Sincronizar URL con estado
   useEffect(() => {
     const path = window.location.pathname;
-    if (activeTab === 'vendas' && path !== '/vendas') {
-      window.history.pushState({}, '', '/vendas');
-    } else if (activeTab !== 'vendas' && path === '/vendas') {
+    if (activeTab === 'ventas' && path !== '/ventas') {
+      window.history.pushState({}, '', '/ventas');
+    } else if (activeTab !== 'ventas' && path === '/ventas') {
       window.history.pushState({}, '', '/');
     }
   }, [activeTab]);
@@ -43,12 +43,12 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname;
-      if (path === '/vendas') {
-        setActiveTab('vendas');
+      if (path === '/ventas') {
+        setActiveTab('ventas');
       } else if (path === '/terms') {
         setShowTermsModal(true);
       } else {
-        if (activeTab === 'vendas') {
+        if (activeTab === 'ventas') {
           setActiveTab(token ? 'dashboard' : 'login');
         }
       }
@@ -105,7 +105,7 @@ export default function App() {
     }
   };
 
-  const isLandingPage = activeTab === 'vendas';
+  const isLandingPage = activeTab === 'ventas';
 
   return (
     <div className="app-container">

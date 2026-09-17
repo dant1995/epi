@@ -102,7 +102,7 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
       <div className="glass-card auth-card">
         <div className="auth-header">
           <h2>Accede a tu Cuenta</h2>
-          <p>Administra tu red de afiliados y acompana tus referidos</p>
+          <p>Administra tu red de afiliados y acompaña tus referidos</p>
         </div>
 
         <div className="demo-box">
@@ -188,7 +188,7 @@ export default function Login({ onLoginSuccess, switchToRegister }) {
           </a>
         </div>
 
-        <a href="/vendas" className="btn-vendas">
+        <a href="/ventas" className="btn-ventas">
           Conoce nuestros planes
         </a>
       </div>

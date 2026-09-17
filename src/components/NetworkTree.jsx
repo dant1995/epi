@@ -92,7 +92,7 @@ export default function NetworkTree({ treeData }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', flexWrap: 'wrap' }}>
               {getLayerBadge(node.layer)}
               {node.is_spillover ? (
-                <span className="origin-badge origin-spillover" style={{ fontSize: '0.48rem', padding: '0.04rem 0.22rem' }}>Derrame</span>
+                <span className="origin-badge origin-spillover" style={{ fontSize: '0.48rem', padding: '0.04rem 0.22rem' }}>Desbordamiento</span>
               ) : (
                 <span className="origin-badge origin-direct" style={{ fontSize: '0.48rem', padding: '0.04rem 0.22rem' }}>Directo</span>
               )}
@@ -132,7 +132,7 @@ export default function NetworkTree({ treeData }) {
 
           {history.length > 0 && (
             <button className="nav-btn nav-btn-ghost" onClick={handleResetToTop} style={{ fontSize: '0.85rem' }}>
-              Ir al Topo (Usted)
+              Ir al Tope (Usted)
             </button>
           )}
         </div>
@@ -242,7 +242,7 @@ export default function NetworkTree({ treeData }) {
               <div className="detail-item">
                 <div className="detail-item-label">Tipo de Vínculo</div>
                 <div className="detail-item-value">
-                  {selectedMember.is_spillover ? '🌊 Derrame (Spillover)' : '🎯 Indicación Directa'}
+                  {selectedMember.is_spillover ? '🌊 Desbordamiento (Spillover)' : '🎯 Indicación Directa'}
                 </div>
               </div>
 

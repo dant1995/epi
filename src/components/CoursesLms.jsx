@@ -268,7 +268,7 @@ export default function CoursesLms({ token, currentUser }) {
                       background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(4px)',
                       padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, color: '#38bdf8'
                     }}>
-                      {course.modules_count || 0} Módulos • {course.lessons_count || 0} Aulas
+                      {course.modules_count || 0} Módulos • {course.lessons_count || 0} Clases
                     </div>
                     {isBlocked && (
                       <div style={{

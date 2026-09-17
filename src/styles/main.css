@@ -646,7 +646,7 @@ a:hover {
   color: var(--text-muted);
 }
 
-.btn-vendas {
+.btn-ventas {
   display: block;
   text-align: center;
   margin-top: 0.75rem;
@@ -660,7 +660,7 @@ a:hover {
   text-decoration: none;
   transition: all 0.25s ease;
 }
-.btn-vendas:hover {
+.btn-ventas:hover {
   background: rgba(251, 191, 36, 0.15);
   border-color: #fbbf24;
   color: #fde68a;
