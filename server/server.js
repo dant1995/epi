@@ -77,6 +77,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'TEMPORARY_INSECURE_SECRET_' + Date
 
 app.use(cors());
 app.use(express.json({
+  limit: '10mb',
   verify: (req, res, buf) => { req.rawBody = buf; }
 }));
 app.use(express.static(path.join(__dirname, '../dist')));
